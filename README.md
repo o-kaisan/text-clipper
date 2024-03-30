@@ -1,14 +1,13 @@
-# text-clipper
-
+# Text Clipper
 
 ## About
 
-`text-clipper`はTUIベースのテキストマネージャー。
-高頻度で使うテキストを保存しておき、このツールを通して一覧表示し、選択したテキストをクリップボードに書き込むことができる
+`Text Clipper` is a TUI-based text manager. It allows you to save texts that you use frequently and, through this tool, display them in a list. You can then select the text you want to copy to the clipboard.
 
-## 環境
+## Environments
 
-- WSL
+- WSL 22.04(LTS)
+- Go 1.22.1
 
 ## Dependexy info andlibraries used
 
@@ -20,7 +19,7 @@
 - WSL (※以下の設定が必要)
 
 
-#### for WSL setting to use clipboard
+#### for WSL setting to use Text Clipper
 
 WSL環境の場合、`atotto/clipboard`が機能しなかった。
 ここでは`bash`と`fish`用の設定を用意したので環境に合わせて設定を追加する。
@@ -82,3 +81,5 @@ WSL環境の場合、`atotto/clipboard`が機能しなかった。
   ```bash
   source ~/.config/fish/functions/xclip.fish
   ```
+
+## Usage

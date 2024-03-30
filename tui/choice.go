@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/help"
@@ -106,7 +105,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, constants.Keymap.Select):
 			for i, choice := range m.choices {
 				if m.cursor == i {
-					log.Printf("selected text: %s", choice.Contents)
 					// 選択したテキストをクリップボードに登録する
 					err := clipboard.WriteAll(choice.Contents)
 					if err != nil {
