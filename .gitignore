@@ -19,3 +19,7 @@
 
 # Go workspace file
 go.work
+
+# this app
+text-clipper.dylib
+debug.log
