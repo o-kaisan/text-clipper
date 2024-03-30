@@ -2,7 +2,9 @@ package tui
 
 import (
 	"fmt"
+	"log"
 
+	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -12,8 +14,6 @@ import (
 	"github.com/o-kaisan/text-clipper/text"
 	"github.com/o-kaisan/text-clipper/tui/constants"
 )
-
-var selectedContent string
 
 type model struct {
 	width   int
@@ -106,8 +106,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, constants.Keymap.Select):
 			for i, choice := range m.choices {
 				if m.cursor == i {
-					selectedContent = choice.Contents
-					// TODO 選択したテキストを出力する
+					log.Printf("selected text: %s", choice.Contents)
+					// 選択したテキストをクリップボードに登録する
+					err := clipboard.WriteAll(choice.Contents)
+					if err != nil {
+						fmt.Println(fmt.Errorf("failed to clip the text to clipboard: text=%s, err=%w", choice.Contents, err))
+					}
 				}
 			}
 			return m, tea.Quit
