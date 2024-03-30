@@ -8,6 +8,8 @@ require (
 	github.com/charmbracelet/bubbletea v0.25.0
 	github.com/charmbracelet/lipgloss v0.10.0
 	github.com/muesli/termenv v0.15.2
+	gorm.io/driver/sqlite v1.5.5
+	gorm.io/gorm v1.25.8
 )
 
 require (
@@ -27,7 +29,5 @@ require (
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.3.8 // indirect
-	gorm.io/driver/sqlite v1.5.5 // indirect
-	gorm.io/gorm v1.25.8 // indirect
+	golang.org/x/text v0.8.0 // indirect
 )
