@@ -21,7 +21,7 @@ func StartTea(tr text.GormRepository) error {
 
 	// TODO: can we acknowledge this error
 	// エラーがtea.Cmdなのでアプリがスタートする前にキャッチできない
-	m, _ := InitialChoice()
+	m, _ := InitialList()
 	if _, err := tea.NewProgram(m, tea.WithAltScreen()).Run(); err != nil {
 		log.Fatal("Error while running program:", err)
 		os.Exit(1)

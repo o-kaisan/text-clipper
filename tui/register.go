@@ -15,6 +15,10 @@ import (
 	"github.com/o-kaisan/text-clipper/tui/constants"
 )
 
+type (
+	errMsg error
+)
+
 type Register struct {
 	textId       uint
 	title        textinput.Model
@@ -39,8 +43,6 @@ var (
 )
 
 func InitialRegister(text *text.Text) Register {
-	log.Printf("id=%d, title=%s", text.ID, text.Title)
-
 	ti := textinput.New()
 	ti.Cursor.Style = cursorStyle // TODO あってもなくてもよい
 	ti.Focus()
@@ -68,10 +70,6 @@ func (m Register) Init() tea.Cmd {
 	return nil
 }
 
-type (
-	errMsg error
-)
-
 func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
@@ -82,7 +80,7 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, constants.Keymap.Back):
-			choice, err := InitialChoice()
+			choice, err := InitialList()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -107,11 +105,11 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						log.Fatal(err)
 					}
 					// 元の画面に戻る
-					choice, _ := InitialChoice()
+					choice, _ := InitialList()
 					return choice.Update(constants.WindowSizeMsg)
 				} else {
 					// 未入力項目があるためエラーメッセージを表示する
-					m.validateErr = "Please fill in all required fields."
+					m.validateErr = "Please fill in all fields."
 				}
 			}
 
@@ -167,7 +165,6 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func saveOrUpdateText(tr *text.GormRepository, text *text.Text) error {
 	var err error
-	log.Printf("target text id=%d, title=%s", text.ID, text.Title)
 	if text.ID == 0 {
 		err = tr.Crete(text)
 	} else {
@@ -185,7 +182,7 @@ func saveOrUpdateText(tr *text.GormRepository, text *text.Text) error {
 func (m Register) View() string {
 	// // 元の画面に戻る
 	// if m.backTo {
-	// 	return InitialChoice().View()
+	// 	return InitialList().View()
 	// }
 
 	var b strings.Builder
@@ -198,10 +195,12 @@ func (m Register) View() string {
 	if m.focusedIndex == m.maxIndex {
 		button = &focusedButton
 	}
+	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
+
 	if len(m.validateErr) > 0 {
 		b.WriteString(validateErrStyle.Render(m.validateErr))
+		b.WriteString("\n\n")
 	}
-	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
 	b.WriteString(helpStyle.Render(m.helpView()))
 
 	return b.String()
