@@ -47,8 +47,8 @@ func (g *GormRepository) Crete(text *Text) error {
 // TODO Error返せるように
 func (g *GormRepository) Update(text *Text) error {
 	result := g.DB.Model(&Text{}).Where("id = ?", text.ID).Updates(map[string]interface{}{
-		"Title":    text.Title,
-		"Contents": text.Content,
+		"Title":   text.Title,
+		"Content": text.Content,
 	})
 	if result.Error != nil {
 		log.Panicf("failed to update text in DB: err=%v", result.Error)
