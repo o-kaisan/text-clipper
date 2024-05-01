@@ -36,11 +36,11 @@ var Keymap = keymap{
 	),
 	Add: key.NewBinding(
 		key.WithKeys("ctrl+a"),
-		key.WithHelp("a", "add new item"),
+		key.WithHelp("ctrl+a", "add new item"),
 	),
 	Edit: key.NewBinding(
 		key.WithKeys("ctrl+e"),
-		key.WithHelp("e", "edit item"),
+		key.WithHelp("ctrl+e", "edit item"),
 	),
 	Quit: key.NewBinding(
 		key.WithKeys("ctrl+c", "esc"),
