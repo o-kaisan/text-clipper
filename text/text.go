@@ -8,8 +8,8 @@ import (
 
 type Text struct {
 	gorm.Model
-	Title    string
-	Contents string
+	Title   string
+	Content string
 }
 
 type Repository interface {
@@ -48,7 +48,7 @@ func (g *GormRepository) Crete(text *Text) error {
 func (g *GormRepository) Update(text *Text) error {
 	result := g.DB.Model(&Text{}).Where("id = ?", text.ID).Updates(map[string]interface{}{
 		"Title":    text.Title,
-		"Contents": text.Contents,
+		"Contents": text.Content,
 	})
 	if result.Error != nil {
 		log.Panicf("failed to update text in DB: err=%v", result.Error)

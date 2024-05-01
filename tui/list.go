@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/atotto/clipboard"
@@ -16,17 +17,23 @@ import (
 )
 
 // ---------------------------------------------------------------
+// Style
+// ---------------------------------------------------------------
 var (
-	titleStyle          = lipgloss.NewStyle().MarginLeft(2)
+	titleStyle          = lipgloss.NewStyle().MarginLeft(0).PaddingTop(1)
 	itemStyle           = lipgloss.NewStyle().PaddingLeft(4)
 	selectedItemStyle   = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
 	paginationStyle     = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	choiceViewHelpStyle = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
+	noItemStyle         = lipgloss.NewStyle().PaddingLeft(2)
+	choiceViewHelpStyle = list.DefaultStyles().HelpStyle.PaddingLeft(2).PaddingBottom(1)
+	previewStyle        = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true).MarginLeft(2).MarginRight(2)
 )
 
 // ---------------------------------------------------------------
-// Itemはlist.Itemインターフェースを実装するためのラッパー
+// Delegate
 // ---------------------------------------------------------------
+
+// Itemはlist.Itemインターフェースを実装するためのラッパー
 type Item struct {
 	*text.Text
 }
@@ -35,9 +42,6 @@ func (l Item) FilterValue() string {
 	return l.Text.Title
 }
 
-// ---------------------------------------------------------------
-// リスト表示
-// ---------------------------------------------------------------
 type itemDelegate struct{}
 
 func (d itemDelegate) Height() int                             { return 1 }
@@ -48,7 +52,9 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	if !ok {
 		return
 	}
-	str := fmt.Sprintf("%d. %s", index+1, i.Title)
+	// 画面全体を使うようにフォーマットを変更する
+	choicesWidth := m.Width() * 2 / 3
+	str := fmt.Sprintf("%d. %-"+strconv.Itoa(choicesWidth)+"s", index+1, i.Title)
 
 	fn := itemStyle.Render
 	if index == m.Index() {
@@ -60,14 +66,8 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	fmt.Fprint(w, fn(str))
 }
 
-func getTextList(tr *text.GormRepository) ([]*text.Text, error) {
-	texts, err := tr.List()
-	if err != nil {
-		return nil, fmt.Errorf("cannot get all texts: %w", err)
-	}
-	return texts, nil
-}
-
+// ---------------------------------------------------------------
+// Model
 // ---------------------------------------------------------------
 type model struct {
 	width  int
@@ -96,24 +96,19 @@ func InitialList() (model, tea.Cmd) {
 
 func convertTextsToListItems(texts []*text.Text) list.Model {
 	listItems := make([]list.Item, len(texts))
-	for i, txt := range texts {
-		listItems[i] = Item{Text: txt}
+	for i, text := range texts {
+		listItems[i] = Item{Text: text}
 	}
-	l := list.New(listItems, itemDelegate{}, 0, 0) // リストのサイズはUpdateで決定する
+
+	// リストの高さと幅はUpdateで決定するため0で初期化する
+	l := list.New(listItems, itemDelegate{}, 0, 0)
 	l.Title = "Select the item you want to copy to clipboard"
 	l.SetShowStatusBar(true)
 	l.SetFilteringEnabled(true)
+	l.Styles.NoItems = noItemStyle
 	l.Styles.Title = titleStyle
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = choiceViewHelpStyle
-	l.SetItems(listItems)
-	l.AdditionalShortHelpKeys = func() []key.Binding {
-		return []key.Binding{
-			constants.Keymap.Select,
-			constants.Keymap.Add,
-			constants.Keymap.Delete,
-		}
-	}
 	l.AdditionalFullHelpKeys = func() []key.Binding {
 		return []key.Binding{
 			constants.Keymap.Select,
@@ -137,9 +132,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		constants.WindowSizeMsg = msg
+		constants.WindowSizeMsg = msg // 別の画面にサイズを渡すため
 		m.width = msg.Width
-		m.height = msg.Height
+		m.height = msg.Height - 3
 	case tea.KeyMsg:
 		if m.list.FilterState() == list.Filtering {
 			break
@@ -163,8 +158,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, textinput.Blink)
 			// 登録画面に遷移
 			initialText := &text.Text{
-				Title:    "",
-				Contents: "",
+				Title:   "",
+				Content: "",
 			}
 			register := InitialRegister(initialText)
 			return register.Update(cmds)
@@ -184,9 +179,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, constants.Keymap.Select):
 
 			choice := m.list.SelectedItem().(Item)
-			err := clipboard.WriteAll(choice.Contents)
+			err := clipboard.WriteAll(choice.Content)
 			if err != nil {
-				fmt.Println(fmt.Errorf("failed to clip the text to clipboard: text=%s, err=%w", choice.Contents, err))
+				fmt.Println(fmt.Errorf("failed to clip the text to clipboard: text=%s, err=%w", choice.Content, err))
 			}
 			return m, tea.Quit
 		}
@@ -208,29 +203,50 @@ func deleteText(tr *text.GormRepository, text *text.Text) error {
 	return nil
 }
 
+func getTextList(tr *text.GormRepository) ([]*text.Text, error) {
+	texts, err := tr.List()
+	if err != nil {
+		return nil, fmt.Errorf("cannot get all texts: %w", err)
+	}
+	return texts, nil
+}
+
 // --------------------------------------------------------------------------------
-// view
+// View
 // --------------------------------------------------------------------------------
 func (m model) View() string {
-	m.list.SetSize(m.width/3, m.height) // リストの画面サイズ
-	return lipgloss.JoinHorizontal(lipgloss.Top, m.choicesView(), m.previewView(m.width/2, m.height-4))
+	mainView := lipgloss.NewStyle().Border(lipgloss.DoubleBorder(), true)
+
+	// choicesViewが画面の2/3の幅を使用
+	choicesWidth := m.width * 2 / 3
+	// previewViewが画面の1/3の幅を使用
+	previewWidth := m.width - choicesWidth
+
+	return mainView.Render(lipgloss.JoinHorizontal(lipgloss.Top, m.choicesView(choicesWidth, m.height), m.previewView(previewWidth, m.height-1)))
 }
 
 func (m model) previewView(width int, height int) string {
-	contents := ""
+	preview := ""
 
 	// フィルタリングでItemがあれば選択しているItemの内容をプレビューに表示する
 	if m.list.FilterState() != list.Filtering {
-		selectedItem := m.list.SelectedItem().(Item)
-		contents = selectedItem.Contents
+		if m.list.SelectedItem() != nil {
+			selectedItem := m.list.SelectedItem().(Item)
+			line := strings.Repeat("=", width) // タイトルとコンテンツの区切り線
+			preview = "Title: " + selectedItem.Title + "\n" + line + "\n" + selectedItem.Content
+		}
 	}
 
-	previewStyle := lipgloss.NewStyle().
-		Border(lipgloss.NormalBorder(), true).
-		BorderForeground(lipgloss.Color("#6272A4"))
-	return previewStyle.Width(width).Height(height).Render(contents)
+	return previewStyle.Width(width).Height(height).Render(preview)
 }
 
-func (m model) choicesView() string {
+func (m model) choicesView(width int, height int) string {
+
+	// リストの画面サイズ
+	m.list.SetWidth(width)
+	m.list.SetHeight(height)
+
+	// TODO ページネーションでアクティブなドットがわかるようにする
+	// メモ：ロジック的にはうまくいっていそうだが、微妙な出力の違いで見えずらいのかもしれない
 	return m.list.View()
 }
