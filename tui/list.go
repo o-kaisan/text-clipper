@@ -158,8 +158,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, textinput.Blink)
 			// 登録画面に遷移
 			initialText := &text.Text{
-				Title:    "",
-				Contents: "",
+				Title:   "",
+				Content: "",
 			}
 			register := InitialRegister(initialText)
 			return register.Update(cmds)
@@ -179,9 +179,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, constants.Keymap.Select):
 
 			choice := m.list.SelectedItem().(Item)
-			err := clipboard.WriteAll(choice.Contents)
+			err := clipboard.WriteAll(choice.Content)
 			if err != nil {
-				fmt.Println(fmt.Errorf("failed to clip the text to clipboard: text=%s, err=%w", choice.Contents, err))
+				fmt.Println(fmt.Errorf("failed to clip the text to clipboard: text=%s, err=%w", choice.Content, err))
 			}
 			return m, tea.Quit
 		}
@@ -226,16 +226,18 @@ func (m model) View() string {
 }
 
 func (m model) previewView(width int, height int) string {
-	contents := ""
+	preview := ""
 
 	// フィルタリングでItemがあれば選択しているItemの内容をプレビューに表示する
 	if m.list.FilterState() != list.Filtering {
-		selectedItem := m.list.SelectedItem().(Item)
-		line := strings.Repeat("=", width) // タイトルとコンテンツの区切り線
-		contents = "Title: " + selectedItem.Title + "\n" + line + "\n" + selectedItem.Contents
+		if m.list.SelectedItem() != nil {
+			selectedItem := m.list.SelectedItem().(Item)
+			line := strings.Repeat("=", width) // タイトルとコンテンツの区切り線
+			preview = "Title: " + selectedItem.Title + "\n" + line + "\n" + selectedItem.Content
+		}
 	}
 
-	return previewStyle.Width(width).Height(height).Render(contents)
+	return previewStyle.Width(width).Height(height).Render(preview)
 }
 
 func (m model) choicesView(width int, height int) string {

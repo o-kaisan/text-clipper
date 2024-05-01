@@ -19,46 +19,50 @@ type (
 	errMsg error
 )
 
+// ---------------------------------------------------------------
+// Style
+// ---------------------------------------------------------------
+var (
+	blurredStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	helpStyle        = blurredStyle.Copy()
+	validateErrStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+
+	focusedButton = lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Render("[ Submit ]")
+	blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
+)
+
+// ---------------------------------------------------------------
+// Model
+// ---------------------------------------------------------------
 type Register struct {
+	width        int
 	textId       uint
 	title        textinput.Model
 	err          error
-	contents     textarea.Model
+	content      textarea.Model
 	focusedIndex int
 	maxIndex     int
 	help         help.Model
 	validateErr  string
 }
 
-var (
-	focusedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-	cursorStyle  = focusedStyle.Copy()
-
-	blurredStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	helpStyle        = blurredStyle.Copy()
-	validateErrStyle = focusedStyle.Copy()
-
-	focusedButton = focusedStyle.Copy().Render("[ Submit ]")
-	blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
-)
-
 func InitialRegister(text *text.Text) Register {
 	ti := textinput.New()
-	ti.Cursor.Style = cursorStyle // TODO あってもなくてもよい
 	ti.Focus()
-	ti.CharLimit = 32
+	ti.CharLimit = 50
 	ti.Placeholder = "Title"
-	ti.PromptStyle = focusedStyle
-	ti.TextStyle = focusedStyle
 	ti.SetValue(text.Title)
 
 	ta := textarea.New()
-	ta.SetValue(text.Contents)
+	ta.ShowLineNumbers = false
+	ta.SetWidth(constants.WindowSizeMsg.Width)
+	ta.Placeholder = "Enter your Content here..."
+	ta.SetValue(text.Content)
 	m := Register{
 		textId:       text.ID, // 0の場合は新規保存
 		title:        ti,
-		contents:     ta,
-		maxIndex:     2, // title, contents, submitの合計 -1
+		content:      ta,
+		maxIndex:     2, // title, content, submitの合計 -1
 		focusedIndex: 0, // 初期表示はタイトルにフォーカス
 		help:         help.New(),
 	}
@@ -70,6 +74,9 @@ func (m Register) Init() tea.Cmd {
 	return nil
 }
 
+// ---------------------------------------------------------------
+// Update
+// ---------------------------------------------------------------
 func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
@@ -77,13 +84,13 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		constants.WindowSizeMsg = msg
+		m.width = msg.Width
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, constants.Keymap.Back):
-			choice, err := InitialList()
-			if err != nil {
-				log.Fatal(err)
-			}
+			// TODO: can we acknowledge this error
+			// エラーがtea.Cmdなのでエラーがキャッチできない
+			choice, _ := InitialList()
 			return choice.Update(constants.WindowSizeMsg)
 		case key.Matches(msg, constants.Keymap.Submit):
 			// submitにフォーカスがある場合に登録処理を実行する
@@ -92,14 +99,14 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.textId != 0 {
 					targetText = constants.Tr.FindByID(m.textId)
 					targetText.Title = m.title.Value()
-					targetText.Contents = m.contents.Value()
+					targetText.Content = m.content.Value()
 				} else {
 					targetText = &text.Text{
-						Title:    m.title.Value(),
-						Contents: m.contents.Value(),
+						Title:   m.title.Value(),
+						Content: m.content.Value(),
 					}
 				}
-				if len(targetText.Title) > 0 && len(targetText.Contents) > 0 {
+				if len(targetText.Title) > 0 && len(targetText.Content) > 0 {
 					err := saveOrUpdateText(constants.Tr, targetText)
 					if err != nil {
 						log.Fatal(err)
@@ -119,11 +126,11 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			// 一旦フォーカスを解除
 			m.title.Blur()
-			m.contents.Blur()
+			m.content.Blur()
 
 			// テキストエリアにフォーカス
 			if m.focusedIndex == 1 {
-				cmd = m.contents.Focus()
+				cmd = m.content.Focus()
 				cmds = append(cmds, cmd)
 			}
 
@@ -133,7 +140,7 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			// 一旦フォーカスを解除
 			m.title.Blur()
-			m.contents.Blur()
+			m.content.Blur()
 
 			// タイトルにフォーカス
 			if m.focusedIndex == 0 {
@@ -142,7 +149,7 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			// コンテンツにフォーカス
 			if m.focusedIndex == 1 {
-				cmd = m.contents.Focus()
+				cmd = m.content.Focus()
 				cmds = append(cmds, cmd)
 			}
 
@@ -156,7 +163,7 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case 0:
 		m.title, cmd = m.title.Update(msg)
 	case 1:
-		m.contents, cmd = m.contents.Update(msg)
+		m.content, cmd = m.content.Update(msg)
 	}
 
 	cmds = append(cmds, cmd)
@@ -180,17 +187,16 @@ func saveOrUpdateText(tr *text.GormRepository, text *text.Text) error {
 // View
 // --------------------------------------------------------------------------------
 func (m Register) View() string {
-	// // 元の画面に戻る
-	// if m.backTo {
-	// 	return InitialList().View()
-	// }
+	if m.width > 0 {
+		m.content.SetWidth(m.width)
+	}
 
 	var b strings.Builder
-	b.WriteString("Register your new texts...")
-	b.WriteString("\n")
+	b.WriteString("Register your new text...")
+	b.WriteString("\n\n")
 	b.WriteString(m.title.View())
 	b.WriteString("\n\n")
-	b.WriteString(m.contents.View())
+	b.WriteString(m.content.View())
 	button := &blurredButton
 	if m.focusedIndex == m.maxIndex {
 		button = &focusedButton
@@ -201,7 +207,7 @@ func (m Register) View() string {
 		b.WriteString(validateErrStyle.Render(m.validateErr))
 		b.WriteString("\n\n")
 	}
-	b.WriteString(helpStyle.Render(m.helpView()))
+	b.WriteString(m.helpView())
 
 	return b.String()
 }
@@ -210,6 +216,8 @@ func (m Register) helpView() string {
 	help := m.help.ShortHelpView([]key.Binding{
 		constants.Keymap.Submit,
 		constants.Keymap.Back,
+		constants.Keymap.Next,
+		constants.Keymap.Prev,
 	})
-	return help
+	return helpStyle.Width(m.width).Render(help)
 }
