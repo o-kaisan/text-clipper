@@ -24,7 +24,6 @@ type GormRepository struct {
 	DB *gorm.DB
 }
 
-// TODO Error返せるように
 func (g *GormRepository) FindByID(id uint) *Text {
 	var text Text
 	result := g.DB.First(&text, id)
@@ -35,7 +34,6 @@ func (g *GormRepository) FindByID(id uint) *Text {
 	return &text
 }
 
-// TODO Error返せるように
 func (g *GormRepository) Crete(text *Text) error {
 	result := g.DB.Create(text)
 	if result.Error != nil {
@@ -44,7 +42,6 @@ func (g *GormRepository) Crete(text *Text) error {
 	return nil
 }
 
-// TODO Error返せるように
 func (g *GormRepository) Update(text *Text) error {
 	result := g.DB.Model(&Text{}).Where("id = ?", text.ID).Updates(map[string]interface{}{
 		"Title":   text.Title,
@@ -56,7 +53,6 @@ func (g *GormRepository) Update(text *Text) error {
 	return nil
 }
 
-// TODO Error返せるように
 func (g *GormRepository) List() ([]*Text, error) {
 	var texts []*Text
 	result := g.DB.Find(&texts)
@@ -67,7 +63,6 @@ func (g *GormRepository) List() ([]*Text, error) {
 	return texts, nil
 }
 
-// TODO Error返せるように
 func (g *GormRepository) Delete(text *Text) error {
 
 	result := g.DB.Delete(&text)

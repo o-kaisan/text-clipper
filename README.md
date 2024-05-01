@@ -9,66 +9,67 @@
 - WSL 22.04(LTS)
 - Go 1.22.1
 
-## Dependexy info andlibraries used
+## installation
+
+```
+go install github.com/o-kaisan/text-clipper@latest
+```
+
+## Dependency info and Libraries used
 
 ### [atotto/clipboard](https://github.com/atotto/clipboard) ※ for copy text to clipboard
 
 - OSX
-- Windows7 (probably work on other Windows)
+- Windows10 (probably work on other Windows)
 - Linux, Unix (requires `xclip` or `xsel` command to be installed)
-- WSL (※以下の設定が必要)
+- WSL (The following settings are required)
 
+#### For WSL Settings to Use Text Clipper
 
-#### for WSL setting to use Text Clipper
+In a WSL environment, `atotto/clipboard` did not work. Here, settings for both `bash` and `fish` are prepared, so add them according to your environment. The mechanism executes the WSL clipboard functionality (write) using the `xclip` command. As a prerequisite, ensure that the clipboard functionality (write) is available with `clip.exe`.
+Reference:[[wsl] 地味に便利なclip.exeでのテキストコピー](https://qiita.com/sasaki_hir/items/45885960b46f87226fd8)
+*Note: If you are using `xclip` or `xsel` with other tools, check their impact before proceeding.
 
-WSL環境の場合、`atotto/clipboard`が機能しなかった。
-ここでは`bash`と`fish`用の設定を用意したので環境に合わせて設定を追加する。
-仕組みは、`xcel`コマンドでWSLのクリップボード機能(書き込み)を実行させる。
-前提として、`clip.exe`でクリップボード機能(書き込み)が利用できることを確認する
-参考: [[wsl] 地味に便利なclip.exeでのテキストコピー](https://qiita.com/sasaki_hir/items/45885960b46f87226fd8)
-※注意）他のツール等で`xclip`や`xsel`を利用している場合は影響を確認した上で実施すること。
+##### Common
 
-##### 共通
-
--  `xclip` と`xsel`を削除する。
-※なぜかいずれかが入っていたら動作しなかった
+- Remove `xclip` and `xsel`. If either is installed, it did not work.
 
     ```
     sudo apt-get remove xclip
     sudo apt-get remove xsel
     ```
 
-##### bash
+##### Bash
 
-- .bashrcを開く
+- Open `.bashrc`
 
     ```bash
     vi ~/.bashrc
     ```
 
-- xclipコマンドで`cat | clip.exe`が実行されるようにfunctionを追加
+- Add a function to execute `cat | clip.exe` using the xclip command
 
     ```bash
     function xclip(){
-    cat | clip.exe
+        cat | clip.exe
     }
     ```
 
-- 再読み込み
+- Reload
 
     ```bash
     source ~/.bashrc
     ```
 
-##### fish
+##### Fish
 
-- functionを作成する
+- Create a function
 
     ```bash
     vi ~/.config/fish/functions/xclip.fish
     ```
 
-- xclipコマンドで`cat | clip.exe`が実行されるようにfunctionを追加
+- Add a function to execute `cat | clip.exe` using the xclip command
 
     ```bash
     function xclip
@@ -76,10 +77,46 @@ WSL環境の場合、`atotto/clipboard`が機能しなかった。
     end
     ```
 
-  - 再読み込み
+- Reload
 
-  ```bash
-  source ~/.config/fish/functions/xclip.fish
+    ```bash
+    source ~/.config/fish/functions/xclip.fish
+    ```
+## Usage
+
+- run
+  ```
+  text-clipper
   ```
 
-## Usage
+### list view
+
+- key binding
+
+    | key | description |
+    | --- | --- |
+    | ↓/j | down |
+    | ↑/k | up |
+    | ctrl+a | add new item |
+    | ctrl+d | delete item |
+    | / | filter |
+    | q/ctrl+c | quit |
+    | ? | more help |
+    | ... | ... |
+
+### register view
+
+- key binding
+
+    | key | description |
+    | --- | --- |
+    | tab | move down |
+    | shift+tab | move up |
+    | Enter | enter over the submit button to register the item |
+    | ctrl+c | back to list view |
+
+- input form
+  - title
+    - 50 character limit
+  - contents
+    - no limit

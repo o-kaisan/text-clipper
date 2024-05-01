@@ -52,7 +52,7 @@ var Keymap = keymap{
 	),
 	Back: key.NewBinding(
 		key.WithKeys("ctrl+c", "esc"),
-		key.WithHelp("ctrl+c/esc", "back to select page"),
+		key.WithHelp("ctrl+c/esc", "back to list view"),
 	),
 	Next: key.NewBinding(
 		key.WithKeys("tab"),

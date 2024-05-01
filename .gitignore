@@ -22,4 +22,5 @@ go.work
 
 # this app
 text-clipper.db
+text-clipper
 debug.log

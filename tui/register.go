@@ -192,7 +192,7 @@ func (m Register) View() string {
 	}
 
 	var b strings.Builder
-	b.WriteString("Register your new text...")
+	b.WriteString("Register your new item...")
 	b.WriteString("\n\n")
 	b.WriteString(m.title.View())
 	b.WriteString("\n\n")
