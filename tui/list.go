@@ -233,7 +233,7 @@ func (m model) previewView(width int, height int) string {
 		if m.list.SelectedItem() != nil {
 			selectedItem := m.list.SelectedItem().(Item)
 			line := strings.Repeat("=", width) // タイトルとコンテンツの区切り線
-			preview = "Title: " + selectedItem.Title + "\n" + line + "\n" + selectedItem.Content
+			preview = selectedItem.Title + "\n" + line + "\n" + selectedItem.Content
 		}
 	}
 
