@@ -5,10 +5,10 @@ deps:
 	go mod tidy
 
 run:
-	go run ./cmd/text-clipper.go
+	go run text-clipper.go
 
 build:
-	go build ./cmd/text-clipper.go
+	go build text-clipper.go
 
 clean:
 	$(RM) text-clipper
