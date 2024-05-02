@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/o-kaisan/text-clipper/common"
 	"github.com/o-kaisan/text-clipper/text"
@@ -17,10 +18,32 @@ var (
 )
 
 func openSqlite() (*gorm.DB, error) {
-	db, err := gorm.Open(sqlite.Open("text-clipper.db"), &gorm.Config{})
+
+	// デフォルトのデータベースパス
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return db, fmt.Errorf("unable to open database: %w", err)
+		return nil, fmt.Errorf("unable to find home directory: %w", err)
 	}
+	defaultDBPath := filepath.Join(homeDir, ".text-clipper", "text-clipper.db")
+
+	// 環境変数で指定されたパスがあればそれを使用
+	dbPath := os.Getenv("TEXT_CLIPPER_DB_PATH")
+	if dbPath == "" {
+		dbPath = defaultDBPath
+	}
+
+	// データベースディレクトリの作成
+	dbDir := filepath.Dir(dbPath)
+	if err := os.MkdirAll(dbDir, 0755); err != nil {
+		return nil, fmt.Errorf("unable to create database directory: %w", err)
+	}
+
+	// データベースに接続
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("unable to open database: %w", err)
+	}
+
 	err = db.AutoMigrate(&text.Text{})
 	if err != nil {
 		return db, fmt.Errorf("unable to migrate database: %w", err)
