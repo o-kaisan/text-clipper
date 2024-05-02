@@ -34,7 +34,7 @@ Reference:[[wsl] 地味に便利なclip.exeでのテキストコピー](https://
 
 - Remove `xclip` and `xsel`. If either is installed, it did not work.
 
-    ```
+    ```bash
     sudo apt-get remove xclip
     sudo apt-get remove xsel
     ```
@@ -82,10 +82,28 @@ Reference:[[wsl] 地味に便利なclip.exeでのテキストコピー](https://
     ```bash
     source ~/.config/fish/functions/xclip.fish
     ```
+
+## This App Uses SQLite
+
+This application utilizes SQLite for data storage. The default database path is `$HOME/.text-clipper/text-clipper.db`. If you wish to specify a different path, please set the environment variable `TEXT_CLIPPER_DB_PATH`.
+
+Bash
+
+```bash
+export TEXT_CLIPPER_DB_PATH=/home/hoge/fuga.db
+```
+
+fish
+
+```bash
+set -x TEXT_CLIPPER_DB_PATH /home/hoge/fuga.db
+```
+
 ## Usage
 
 - run
-  ```
+
+  ```bash
   text-clipper
   ```
 
