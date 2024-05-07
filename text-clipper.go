@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	Version = "1.0.1"
+	Version = "1.0.2"
 )
 
 func openSqlite() (*gorm.DB, error) {
