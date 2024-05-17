@@ -183,6 +183,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if err != nil {
 				fmt.Println(fmt.Errorf("failed to clip the text to clipboard: text=%s, err=%w", choice.Content, err))
 			}
+			// アイテムを選択したらアプリを閉じる
 			return m, tea.Quit
 		}
 	}
