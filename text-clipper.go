@@ -20,14 +20,12 @@ var (
 func openSqlite() (*gorm.DB, error) {
 
 	// デフォルトのデータベースパス
-	homeDir, err := os.UserHomeDir()
+	defaultDBPath, err := common.GetPathFromDefaultPath("text-clipper.db")
 	if err != nil {
-		return nil, fmt.Errorf("unable to find home directory: %w", err)
+		return nil, fmt.Errorf("failed in getting db path: %w", err)
 	}
-	defaultDBPath := filepath.Join(homeDir, ".text-clipper", "text-clipper.db")
-
 	// 環境変数で指定されたパスがあればそれを使用
-	dbPath := os.Getenv("TEXT_CLIPPER_DB_PATH")
+	dbPath := os.Getenv("TEXT_CLIPPER__DB_PATH")
 	if dbPath == "" {
 		dbPath = defaultDBPath
 	}
@@ -74,6 +72,7 @@ func main() {
 	db, err := openSqlite()
 	if err != nil {
 		log.Fatal(err)
+		os.Exit(1)
 	}
 	tr := text.GormRepository{DB: db}
 	tui.StartTea(tr)
