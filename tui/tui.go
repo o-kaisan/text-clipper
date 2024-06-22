@@ -13,18 +13,12 @@ import (
 // StartTea the entry point for the UI. Initializes the model.
 func StartTea(tr text.GormRepository) error {
 	// デフォルトのデータベースパス
-	defaultLogFilePath, err := common.GetPathFromDefaultPath("debug.log")
+	logFilePath, err := common.GetPathFromPath("debug.log")
 	if err != nil {
 		log.Fatal("failed in getting log file path: %w", err)
 		os.Exit(1)
 	}
-	// 環境変数で指定されたパスがあればそれを使用
-	logFilePath := os.Getenv("TEXT_CLIPPER__LOG_FILE_PATH")
-	if defaultLogFilePath == "" {
-		defaultLogFilePath = logFilePath
-	}
-
-	f, err := tea.LogToFile(defaultLogFilePath, "debug")
+	f, err := tea.LogToFile(logFilePath, "debug")
 	if err != nil {
 		log.Fatal("failed in setting log file: %w", err)
 		os.Exit(1)
