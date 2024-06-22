@@ -20,9 +20,10 @@ To use SQLite within the application on Windows, please follow these steps:
 
 2. **Enable CGO**
    - Set the environment variable `CGO_ENABLED` to `1`. Execute the following command in the command prompt:
-     ```cmd
-     set CGO_ENABLED=1
-     ```
+
+```cmd
+set CGO_ENABLED=1
+```
 
 After completing these settings, proceed to install the application.
 
@@ -157,4 +158,3 @@ To make this setting permanent, add the above command to the appropriate shell c
     - 50 character limit
   - contents
     - no limit
-

@@ -1,12 +1,16 @@
 {
     "cSpell.words": [
+        "atotto",
         "bubbletea",
         "charmbracelet",
         "cmds",
         "Gorm",
+        "hoge",
         "kaisan",
         "keymap",
         "lipgloss",
-        "textinput"
+        "textinput",
+        "xclip",
+        "xsel"
     ]
 }

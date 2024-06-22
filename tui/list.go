@@ -48,13 +48,23 @@ func (d itemDelegate) Height() int                             { return 1 }
 func (d itemDelegate) Spacing() int                            { return 0 }
 func (d itemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
 func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
+
 	i, ok := listItem.(Item)
 	if !ok {
 		return
 	}
+
 	// 画面全体を使うようにフォーマットを変更する
 	choicesWidth := m.Width() * 2 / 3
-	str := fmt.Sprintf("%d. %-"+strconv.Itoa(choicesWidth)+"s", index+1, i.Title)
+	itemNum := index + 1
+
+	// リストのタイトルが揃うように10個未満は空白を2つ入れる
+	var str string
+	if itemNum >= 10 {
+		str = fmt.Sprintf("%d. %-"+strconv.Itoa(choicesWidth)+"s", itemNum, i.Title)
+	} else {
+		str = fmt.Sprintf("%d.  %-"+strconv.Itoa(choicesWidth)+"s", itemNum, i.Title)
+	}
 
 	fn := itemStyle.Render
 	if index == m.Index() {
