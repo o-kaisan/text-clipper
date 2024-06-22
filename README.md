@@ -7,11 +7,28 @@
 ## Environments
 
 - WSL 22.04(LTS)
+- Windows 11
 - Go 1.22.1
 
-## installation
+## Windows Setup
 
-```
+To use SQLite within the application on Windows, please follow these steps:
+
+1. **Install GCC**
+   - Install a GCC compiler such as MinGW or TDM-GCC.
+   - Verify the installation by running `gcc --version` in the command prompt to ensure it was successful.
+
+2. **Enable CGO**
+   - Set the environment variable `CGO_ENABLED` to `1`. Execute the following command in the command prompt:
+     ```cmd
+     set CGO_ENABLED=1
+     ```
+
+After completing these settings, proceed to install the application.
+
+## Installation
+
+```bash
 go install github.com/o-kaisan/text-clipper@latest
 ```
 
