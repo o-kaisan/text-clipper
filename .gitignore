@@ -24,3 +24,4 @@ go.work
 text-clipper.db
 text-clipper
 debug.log
+bin/

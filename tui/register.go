@@ -23,13 +23,42 @@ type (
 // Style
 // ---------------------------------------------------------------
 var (
-	blurredStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	helpStyle        = blurredStyle.Copy()
-	validateErrStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	blurredStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	registerHelpStyle = blurredStyle.Copy()
+	validateErrStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 
 	focusedButton = lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Render("[ Submit ]")
 	blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
 )
+
+// ---------------------------------------------------------------
+// Keys
+// ---------------------------------------------------------------
+type registerKeyMap struct {
+	Submit key.Binding
+	Back   key.Binding
+	Next   key.Binding
+	Prev   key.Binding
+}
+
+var registerKeys = registerKeyMap{
+	Submit: key.NewBinding(
+		key.WithKeys("enter"),
+		key.WithHelp("enter", "over the submit button to register the item"),
+	),
+	Back: key.NewBinding(
+		key.WithKeys("ctrl+c", "esc"),
+		key.WithHelp("ctrl+c/esc", "back to list view"),
+	),
+	Next: key.NewBinding(
+		key.WithKeys("tab"),
+		key.WithHelp("tab", "next input"),
+	),
+	Prev: key.NewBinding(
+		key.WithKeys("shift+tab"),
+		key.WithHelp("shift+tab", "previous input"),
+	),
+}
 
 // ---------------------------------------------------------------
 // Model
@@ -87,12 +116,12 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, constants.Keymap.Back):
+		case key.Matches(msg, registerKeys.Back):
 			// TODO: can we acknowledge this error
 			// エラーがtea.Cmdなのでエラーがキャッチできない
 			choice, _ := InitialList()
 			return choice.Update(constants.WindowSizeMsg)
-		case key.Matches(msg, constants.Keymap.Submit):
+		case key.Matches(msg, registerKeys.Submit):
 			// submitにフォーカスがある場合に登録処理を実行する
 			if m.focusedIndex == m.maxIndex {
 				var targetText *text.Text
@@ -120,7 +149,7 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 
-		case key.Matches(msg, constants.Keymap.Next):
+		case key.Matches(msg, registerKeys.Next):
 			if m.focusedIndex < m.maxIndex {
 				m.focusedIndex++
 			}
@@ -134,7 +163,7 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds = append(cmds, cmd)
 			}
 
-		case key.Matches(msg, constants.Keymap.Prev):
+		case key.Matches(msg, registerKeys.Prev):
 			if m.focusedIndex > 0 {
 				m.focusedIndex--
 			}
@@ -188,6 +217,7 @@ func saveOrUpdateText(tr *text.GormRepository, text *text.Text) error {
 // --------------------------------------------------------------------------------
 func (m Register) View() string {
 	if m.width > 0 {
+		// m.title.Width = m.width
 		m.content.SetWidth(m.width)
 	}
 
@@ -214,10 +244,10 @@ func (m Register) View() string {
 
 func (m Register) helpView() string {
 	help := m.help.ShortHelpView([]key.Binding{
-		constants.Keymap.Submit,
-		constants.Keymap.Back,
-		constants.Keymap.Next,
-		constants.Keymap.Prev,
+		registerKeys.Submit,
+		registerKeys.Back,
+		registerKeys.Next,
+		registerKeys.Prev,
 	})
-	return helpStyle.Width(m.width).Render(help)
+	return registerHelpStyle.Width(m.width).Render(help)
 }

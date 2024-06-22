@@ -3,10 +3,12 @@ package tui
 import (
 	"fmt"
 	"io"
+	"log"
 	"strconv"
 	"strings"
 
 	"github.com/atotto/clipboard"
+	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -16,17 +18,82 @@ import (
 	"github.com/o-kaisan/text-clipper/tui/constants"
 )
 
+// --------------------------------------------------------------------------------
+// Help
+// --------------------------------------------------------------------------------
+type listKeyMap struct {
+	Up     key.Binding
+	Down   key.Binding
+	Select key.Binding
+	Add    key.Binding
+	Quit   key.Binding
+	Paste  key.Binding
+	Delete key.Binding
+	Edit   key.Binding
+	Help   key.Binding
+}
+
+var listKeys = listKeyMap{
+	Select: key.NewBinding(
+		key.WithKeys("enter"),
+		key.WithHelp("enter", "select item"),
+	),
+	Add: key.NewBinding(
+		key.WithKeys("ctrl+a"),
+		key.WithHelp("ctrl+a", "add new item"),
+	),
+	Edit: key.NewBinding(
+		key.WithKeys("ctrl+e"),
+		key.WithHelp("ctrl+e", "edit item"),
+	),
+	Quit: key.NewBinding(
+		key.WithKeys("ctrl+c", "esc"),
+		key.WithHelp("ctrl+c/esc", "quit"),
+	),
+	Delete: key.NewBinding(
+		key.WithKeys("ctrl+d"),
+		key.WithHelp("ctrl+d", "delete item"),
+	),
+	Help: key.NewBinding(
+		key.WithKeys("?"),
+		key.WithHelp("?", "toggle help"),
+	),
+	Up: key.NewBinding(
+		key.WithKeys("up", "k"),
+		key.WithHelp("↑/k", "move up"),
+	),
+	Down: key.NewBinding(
+		key.WithKeys("down", "j"),
+		key.WithHelp("↓/j", "move down"),
+	),
+}
+
+// ShortHelp returns keybindings to be shown in the mini help view. It's part
+// of the key.Map interface.
+func (k listKeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Help, k.Quit, k.Add}
+}
+
+// FullHelp returns keybindings for the expanded help view. It's part of the
+// key.Map interface.
+func (k listKeyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Delete, k.Edit, k.Quit},
+		{k.Up, k.Down},
+		{k.Select, k.Help},
+	}
+}
+
 // ---------------------------------------------------------------
 // Style
 // ---------------------------------------------------------------
 var (
-	titleStyle          = lipgloss.NewStyle().MarginLeft(0).PaddingTop(1)
-	itemStyle           = lipgloss.NewStyle().PaddingLeft(4)
-	selectedItemStyle   = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
-	paginationStyle     = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	noItemStyle         = lipgloss.NewStyle().PaddingLeft(2)
-	choiceViewHelpStyle = list.DefaultStyles().HelpStyle.PaddingLeft(2).PaddingBottom(1)
-	previewStyle        = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true).MarginLeft(2).MarginRight(2)
+	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
+	noItemStyle       = lipgloss.NewStyle().PaddingLeft(2)
+	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
+	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+	previewStyle      = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true).MarginLeft(2).MarginRight(1).MarginTop(2)
+	listHelpStyle     = lipgloss.NewStyle().PaddingLeft(2).PaddingTop(1).PaddingBottom(1)
 )
 
 // ---------------------------------------------------------------
@@ -81,6 +148,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 // ---------------------------------------------------------------
 type model struct {
 	width  int
+	help   help.Model
 	height int
 	list   list.Model
 	err    error
@@ -88,7 +156,6 @@ type model struct {
 
 func InitialList() (model, tea.Cmd) {
 	var m model
-
 	texts, err := getTextList(constants.Tr)
 	if err != nil {
 		m.err = fmt.Errorf("failed to initial choice: %w", err)
@@ -98,9 +165,8 @@ func InitialList() (model, tea.Cmd) {
 	// *text.Text のスライスを ListItem のスライスに変換
 	// 検索機能有効化
 	l := convertTextsToListItems(texts)
-
 	m.list = l
-
+	m.help = help.New()
 	return m, func() tea.Msg { return errMsg(err) }
 }
 
@@ -110,22 +176,16 @@ func convertTextsToListItems(texts []*text.Text) list.Model {
 		listItems[i] = Item{Text: text}
 	}
 
-	// リストの高さと幅はUpdateで決定するため0で初期化する
+	// リストモデルの初期化 //
+	// リストの高さと幅は Update と View で決定するため0で初期化する
 	l := list.New(listItems, itemDelegate{}, 0, 0)
-	l.Title = "Select the item you want to copy to clipboard"
 	l.SetShowStatusBar(true)
 	l.SetFilteringEnabled(true)
 	l.Styles.NoItems = noItemStyle
-	l.Styles.Title = titleStyle
 	l.Styles.PaginationStyle = paginationStyle
-	l.Styles.HelpStyle = choiceViewHelpStyle
-	l.AdditionalFullHelpKeys = func() []key.Binding {
-		return []key.Binding{
-			constants.Keymap.Select,
-			constants.Keymap.Add,
-			constants.Keymap.Delete,
-		}
-	}
+	l.SetShowHelp(false)  // helpは独自で定義するためここで明示的に無効化する
+	l.SetShowTitle(false) // Titleはここで明示的に無効化する
+
 	return l
 }
 
@@ -143,7 +203,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		constants.WindowSizeMsg = msg // 別の画面にサイズを渡すため
-		m.width = msg.Width
+		m.width = msg.Width - 5
 		m.height = msg.Height - 3
 	case tea.KeyMsg:
 		if m.list.FilterState() == list.Filtering {
@@ -151,9 +211,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		switch {
-		case key.Matches(msg, constants.Keymap.Quit):
+		case key.Matches(msg, listKeys.Quit):
 			return m, tea.Quit
-		case key.Matches(msg, constants.Keymap.Edit):
+		case key.Matches(msg, listKeys.Help):
+			m.help.ShowAll = !m.help.ShowAll
+		case key.Matches(msg, listKeys.Edit):
 			var cmds []interface{}
 			cmds = append(cmds, constants.WindowSizeMsg)
 			cmds = append(cmds, textinput.Blink)
@@ -162,7 +224,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			register := InitialRegister(targetText)
 			return register.Update(cmds)
 
-		case key.Matches(msg, constants.Keymap.Add):
+		case key.Matches(msg, listKeys.Add):
 			var cmds []interface{}
 			cmds = append(cmds, constants.WindowSizeMsg)
 			cmds = append(cmds, textinput.Blink)
@@ -174,7 +236,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			register := InitialRegister(initialText)
 			return register.Update(cmds)
 
-		case key.Matches(msg, constants.Keymap.Delete):
+		case key.Matches(msg, listKeys.Delete):
 			// 対象のitemを削除する
 			selectedItem := m.list.SelectedItem().(Item)
 			choice := constants.Tr.FindByID(selectedItem.ID)
@@ -186,7 +248,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.list = convertTextsToListItems(texts)
 
-		case key.Matches(msg, constants.Keymap.Select):
+		case key.Matches(msg, listKeys.Select):
 
 			choice := m.list.SelectedItem().(Item)
 			err := clipboard.WriteAll(choice.Content)
@@ -226,14 +288,46 @@ func getTextList(tr *text.GormRepository) ([]*text.Text, error) {
 // View
 // --------------------------------------------------------------------------------
 func (m model) View() string {
+	/*
+		# 最低幅
+		widthが80の時
+		choicesWidth: 40
+		previewWidth: 30
+	*/
+
 	mainView := lipgloss.NewStyle().Border(lipgloss.DoubleBorder(), true)
+	log.Println(m.width)
 
-	// choicesViewが画面の2/3の幅を使用
-	choicesWidth := m.width * 2 / 3
-	// previewViewが画面の1/3の幅を使用
-	previewWidth := m.width - choicesWidth
+	var choicesWidth int
+	var previewWidth int
+	var helpWidth int
+	if m.width <= 80 {
+		// 最低限の幅を設定する
+		choicesWidth = 50
+		previewWidth = 30
+		helpWidth = 75
+	} else {
+		// choicesViewが画面の2/3の幅を使用
+		choicesWidth = m.width * 1 / 3
+		// previewViewが画面の1/3の幅を使用
+		previewWidth = m.width - choicesWidth - 20
+		helpWidth = m.width
+	}
 
-	return mainView.Render(lipgloss.JoinHorizontal(lipgloss.Top, m.choicesView(choicesWidth, m.height), m.previewView(previewWidth, m.height-1)))
+	choices := m.choicesView(choicesWidth, m.height-6)
+	preview := m.previewView(previewWidth, m.height-10)
+	help := m.helpView(helpWidth)
+
+	return mainView.Render(lipgloss.JoinHorizontal(lipgloss.Top, choices, preview) + "\n" + help)
+}
+
+func (m model) choicesView(width int, height int) string {
+
+	// リストの画面サイズ
+	m.list.SetWidth(width)
+	m.list.SetHeight(height) // m.list.Styles.Title.Width(30)
+
+	return lipgloss.NewStyle().Render(m.list.View())
 }
 
 func (m model) previewView(width int, height int) string {
@@ -251,13 +345,6 @@ func (m model) previewView(width int, height int) string {
 	return previewStyle.Width(width).Height(height).Render(preview)
 }
 
-func (m model) choicesView(width int, height int) string {
-
-	// リストの画面サイズ
-	m.list.SetWidth(width)
-	m.list.SetHeight(height)
-
-	// TODO ページネーションでアクティブなドットがわかるようにする
-	// メモ：ロジック的にはうまくいっていそうだが、微妙な出力の違いで見えずらいのかもしれない
-	return m.list.View()
+func (m model) helpView(width int) string {
+	return listHelpStyle.Width(width).Render(m.help.View(listKeys))
 }
