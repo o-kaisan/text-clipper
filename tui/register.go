@@ -49,7 +49,7 @@ type Register struct {
 func InitialRegister(text *text.Text) Register {
 	ti := textinput.New()
 	ti.Focus()
-	ti.CharLimit = 50
+	ti.CharLimit = 35
 	ti.Placeholder = "Title"
 	ti.SetValue(text.Title)
 
