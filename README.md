@@ -83,21 +83,23 @@ Reference:[[wsl] 地味に便利なclip.exeでのテキストコピー](https://
     source ~/.config/fish/functions/xclip.fish
     ```
 
-## This App Uses SQLite
+## Configuration File Location
 
-This application utilizes SQLite for data storage. The default database path is `$HOME/.text-clipper/text-clipper.db`. If you wish to specify a different path, please set the environment variable `TEXT_CLIPPER_DB_PATH`.
+By default, this application creates a .text-clipper directory under the user's home directory. If you want to change the location where this file is stored, please set a new path by specifying the TEXT_CLIPPER_PATH environment variable.
 
 Bash
 
 ```bash
-export TEXT_CLIPPER_DB_PATH=/home/hoge/fuga.db
+export TEXT_CLIPPER_PATH=/home/hoge
 ```
 
 fish
 
 ```bash
-set -x TEXT_CLIPPER_DB_PATH /home/hoge/fuga.db
+set -x TEXT_CLIPPER_PATH /home/hoge
 ```
+
+To make this setting permanent, add the above command to the appropriate shell configuration file (e.g., .bashrc, .bash_profile, or config.fish).
 
 ## Usage
 
@@ -138,3 +140,4 @@ set -x TEXT_CLIPPER_DB_PATH /home/hoge/fuga.db
     - 50 character limit
   - contents
     - no limit
+

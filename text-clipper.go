@@ -19,18 +19,10 @@ var (
 
 func openSqlite() (*gorm.DB, error) {
 
-	// デフォルトのデータベースパス
-	defaultDBPath, err := common.GetPathFromDefaultPath("text-clipper.db")
+	dbPath, err := common.GetPathFromPath("text-clipper.db")
 	if err != nil {
 		return nil, fmt.Errorf("failed in getting db path: %w", err)
 	}
-	// 環境変数で指定されたパスがあればそれを使用
-	dbPath := os.Getenv("TEXT_CLIPPER__DB_PATH")
-	if dbPath == "" {
-		dbPath = defaultDBPath
-	}
-
-	// データベースディレクトリの作成
 	dbDir := filepath.Dir(dbPath)
 	if err := os.MkdirAll(dbDir, 0755); err != nil {
 		return nil, fmt.Errorf("unable to create database directory: %w", err)
