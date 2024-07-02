@@ -23,12 +23,13 @@ type (
 // Style
 // ---------------------------------------------------------------
 var (
-	blurredStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	blurredStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	// TODO widthの調整が必要
+	// TODO Help独自実装してもよいかも
 	registerHelpStyle = blurredStyle.Copy()
 	validateErrStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-
-	focusedButton = lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Render("[ Submit ]")
-	blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
+	focusedButton     = lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Render("[ Submit ]")
+	blurredButton     = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
 )
 
 // ---------------------------------------------------------------
