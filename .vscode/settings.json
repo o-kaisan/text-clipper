@@ -9,6 +9,8 @@
         "kaisan",
         "keymap",
         "lipgloss",
+        "pgdown",
+        "pgup",
         "textinput",
         "xclip",
         "xsel"

@@ -135,12 +135,14 @@ To make this setting permanent, add the above command to the appropriate shell c
     | --- | --- |
     | ↓/j | down |
     | ↑/k | up |
+    | g | top |
+    | G | end |
     | ctrl+a | add new item |
+    | ctrl+e | edit item |
     | ctrl+d | delete item |
     | / | filter |
     | q/ctrl+c | quit |
     | ? | more help |
-    | ... | ... |
 
 ### register view
 
@@ -158,3 +160,30 @@ To make this setting permanent, add the above command to the appropriate shell c
     - 50 character limit
   - contents
     - no limit
+
+### List Sorting Functionality
+
+This configuration defines various criteria for sorting a list. By using the environment variable `TEXT_CLIPPER_SORT`, you can control the sort order of the list by specifying one of the following keys.
+
+### Sort Order Table
+
+| Key            | Description                                 |
+|----------------|---------------------------------------------|
+| createdAtAsc(Default)   | Sort by creation date in ascending order    |
+| updatedAtAsc   | Sort by update date in ascending order      |
+| lastUsedAtAsc  | Sort by last used date in ascending order   |
+| createdAtDesc  | Sort by creation date in descending order   |
+| updatedAtDesc  | Sort by update date in descending order     |
+| lastUsedAtDesc | Sort by last used date in descending order  |
+
+#### Setting Environment Variables
+
+**Bash:**
+
+```bash
+export TEXT_CLIPPER_SORT="createdAtDesc"
+
+**Fish:**
+
+```fish
+set -x TEXT_CLIPPER_SORT createdAtDesc
