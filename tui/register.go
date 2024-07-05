@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -139,14 +140,20 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// submitにフォーカスがある場合に登録処理を実行する
 			if m.focusedIndex == m.maxIndex {
 				var targetText *text.Text
+
+				now := time.Now()
+				// 上書き更新
 				if m.textId != 0 {
 					targetText = constants.Tr.FindByID(m.textId)
 					targetText.Title = m.title.Value()
 					targetText.Content = m.content.Value()
-				} else {
+					targetText.UpdatedAt = now
+				} else { // 新規登録
 					targetText = &text.Text{
-						Title:   m.title.Value(),
-						Content: m.content.Value(),
+						Title:     m.title.Value(),
+						Content:   m.content.Value(),
+						UpdatedAt: now,
+						CreatedAt: now,
 					}
 				}
 				if len(targetText.Title) > 0 && len(targetText.Content) > 0 {
