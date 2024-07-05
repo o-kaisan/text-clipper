@@ -3,7 +3,7 @@ package tui
 import (
 	"fmt"
 	"io"
-	"log"
+	"math"
 	"strconv"
 	"strings"
 
@@ -31,6 +31,8 @@ type listKeyMap struct {
 	Delete key.Binding
 	Edit   key.Binding
 	Help   key.Binding
+	Home   key.Binding
+	End    key.Binding
 }
 
 var listKeys = listKeyMap{
@@ -66,6 +68,14 @@ var listKeys = listKeyMap{
 		key.WithKeys("down", "j"),
 		key.WithHelp("↓/j", "move down"),
 	),
+	Home: key.NewBinding(
+		key.WithKeys("g"),
+		key.WithHelp("g", "home"),
+	),
+	End: key.NewBinding(
+		key.WithKeys("G"),
+		key.WithHelp("G", "end"),
+	),
 }
 
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
@@ -78,9 +88,10 @@ func (k listKeyMap) ShortHelp() []key.Binding {
 // key.Map interface.
 func (k listKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Delete, k.Edit, k.Quit},
 		{k.Up, k.Down},
+		{k.Home, k.End},
 		{k.Select, k.Help},
+		{k.Delete, k.Edit, k.Quit},
 	}
 }
 
@@ -289,41 +300,33 @@ func getTextList(tr *text.GormRepository) ([]*text.Text, error) {
 // View
 // --------------------------------------------------------------------------------
 func (m model) View() string {
-	/*
-		# 最低幅
-		widthが80の時
-		choicesWidth: 40
-		previewWidth: 30
-	*/
-
-	mainView := lipgloss.NewStyle().Border(lipgloss.DoubleBorder(), true)
-	log.Println(m.width)
+	mainView := lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
 
 	var choicesWidth int
 	var previewWidth int
 	var helpWidth int
 	if m.width <= 80 {
 		// 最低限の幅を設定する
-		choicesWidth = 50
-		previewWidth = 30
-		helpWidth = 75
+		choicesWidth = 45
+		previewWidth = 35
+		helpWidth = 80
 	} else {
 		// choicesViewが画面の2/3の幅を使用
-		choicesWidth = m.width * 1 / 3
+		// choicesWidth = m.width * 1 / 3
+		choicesWidth = 45
 		// previewViewが画面の1/3の幅を使用
-		previewWidth = m.width - choicesWidth - 20
+		previewWidth = m.width - choicesWidth
 		helpWidth = m.width
 	}
 
 	choices := m.choicesView(choicesWidth, m.height-6)
-	preview := m.previewView(previewWidth, m.height-10)
+	preview := m.previewView(previewWidth, m.height-6)
 	help := m.helpView(helpWidth)
 
 	return mainView.Render(lipgloss.JoinHorizontal(lipgloss.Top, choices, preview) + "\n" + help)
 }
 
 func (m model) choicesView(width int, height int) string {
-
 	// リストの画面サイズ
 	m.list.SetWidth(width)
 	m.list.SetHeight(height) // m.list.Styles.Title.Width(30)
