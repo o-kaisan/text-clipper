@@ -23,9 +23,9 @@ type (
 // Style
 // ---------------------------------------------------------------
 var (
-	blurredStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	// TODO widthの調整が必要
-	// TODO Help独自実装してもよいかも
+	descriptionStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color("#696969"))
+	registerViewStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).PaddingTop(1).PaddingLeft(2).PaddingBottom(1)
+	blurredStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 	registerHelpStyle = blurredStyle.Copy()
 	validateErrStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	focusedButton     = lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Render("[ Submit ]")
@@ -33,13 +33,14 @@ var (
 )
 
 // ---------------------------------------------------------------
-// Keys
+// Help
 // ---------------------------------------------------------------
 type registerKeyMap struct {
 	Submit key.Binding
 	Back   key.Binding
 	Next   key.Binding
 	Prev   key.Binding
+	Help   key.Binding
 }
 
 var registerKeys = registerKeyMap{
@@ -59,6 +60,16 @@ var registerKeys = registerKeyMap{
 		key.WithKeys("shift+tab"),
 		key.WithHelp("shift+tab", "previous input"),
 	),
+}
+
+// ショートヘルプは使用しないため、空のkey.Bindingを返す
+func (k registerKeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{}
+}
+func (k registerKeyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Next, k.Prev, k.Submit, k.Back},
+	}
 }
 
 // ---------------------------------------------------------------
@@ -95,7 +106,9 @@ func InitialRegister(text *text.Text) Register {
 		maxIndex:     2, // title, content, submitの合計 -1
 		focusedIndex: 0, // 初期表示はタイトルにフォーカス
 		help:         help.New(),
+		width:        constants.WindowSizeMsg.Width,
 	}
+	m.help.ShowAll = true // フルヘルプをはじめから表示する
 	return m
 }
 
@@ -114,7 +127,7 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		constants.WindowSizeMsg = msg
-		m.width = msg.Width
+		m.width = msg.Width - 4
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, registerKeys.Back):
@@ -217,13 +230,20 @@ func saveOrUpdateText(tr *text.GormRepository, text *text.Text) error {
 // View
 // --------------------------------------------------------------------------------
 func (m Register) View() string {
-	if m.width > 0 {
-		// m.title.Width = m.width
-		m.content.SetWidth(m.width)
+	registerViewWidth := m.width - 5
+	registerViewHeight := 18
+	helpWidth := m.width - 5
+
+	// 最低限のwidthを定義
+	if m.width <= 65 {
+		helpWidth = 65
+		registerViewWidth = 65
 	}
 
+	m.content.SetWidth(registerViewWidth - 3)
+
 	var b strings.Builder
-	b.WriteString("Register your new item...")
+	b.WriteString(descriptionStyle.Render("Register your new item."))
 	b.WriteString("\n\n")
 	b.WriteString(m.title.View())
 	b.WriteString("\n\n")
@@ -238,17 +258,11 @@ func (m Register) View() string {
 		b.WriteString(validateErrStyle.Render(m.validateErr))
 		b.WriteString("\n\n")
 	}
-	b.WriteString(m.helpView())
+	b.WriteString(m.helpView(helpWidth))
 
-	return b.String()
+	return registerViewStyle.Width(registerViewWidth).Height(registerViewHeight).Render(b.String())
 }
 
-func (m Register) helpView() string {
-	help := m.help.ShortHelpView([]key.Binding{
-		registerKeys.Submit,
-		registerKeys.Back,
-		registerKeys.Next,
-		registerKeys.Prev,
-	})
-	return registerHelpStyle.Width(m.width).Render(help)
+func (m Register) helpView(width int) string {
+	return registerHelpStyle.Width(width).Render(m.help.View(registerKeys))
 }

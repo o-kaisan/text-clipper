@@ -81,7 +81,7 @@ var listKeys = listKeyMap{
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
 // of the key.Map interface.
 func (k listKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Help, k.Quit, k.Add}
+	return []key.Binding{k.Help, k.Quit}
 }
 
 // FullHelp returns keybindings for the expanded help view. It's part of the
@@ -371,7 +371,7 @@ func calculateMaxLines(height int) int {
 
 // 高さに応じて指数関数的にmaxLengthを計算する関数
 func calculateMaxLength(height int) int {
-	return int(math.Pow(float64(height), 1.4)) * 11
+	return int(math.Pow(float64(height), 1.3)) * 10
 }
 
 func truncateString(s string, maxLength int, maxLines int) string {
