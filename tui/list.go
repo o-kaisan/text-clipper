@@ -347,8 +347,11 @@ func (m model) previewView(width int, height int) string {
 	if m.list.FilterState() != list.Filtering {
 		if m.list.SelectedItem() != nil {
 			selectedItem := m.list.SelectedItem().(Item)
-			line := strings.Repeat("-", width-(preViewPadding*2)) // タイトルとコンテンツの区切り線
-			preview = selectedItem.Title + "\n" + line + "\n" + truncateString(selectedItem.Content, maxLength, maxLines)
+			// タイトルとコンテンツの区切り線
+			line := strings.Repeat(" ", width-(preViewPadding*2))
+			titleStyle := lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, false, true, false)
+
+			preview = selectedItem.Title + titleStyle.Render(line) + "\n" + truncateString(selectedItem.Content, maxLength, maxLines)
 		}
 	}
 
