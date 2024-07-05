@@ -2,14 +2,37 @@ package text
 
 import (
 	"log"
+	"time"
 
 	"gorm.io/gorm"
 )
 
 type Text struct {
 	gorm.Model
-	Title   string
-	Content string
+	Title      string
+	Content    string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	LastUsedAt time.Time
+}
+
+var (
+	// Order Byするための条件式
+	createdAtDesc  = "created_at desc"
+	updatedAtDesc  = "updated_at desc"
+	lastUsedAtDesc = "last_used_at desc"
+	createdAtAsc   = "created_at asc"
+	updatedAtAsc   = "updated_at asc"
+	lastUsedAtAsc  = "last_used_at asc"
+)
+
+var orderMap = map[string]string{
+	"createdAtDesc":  createdAtDesc,
+	"updatedAtDesc":  updatedAtDesc,
+	"lastUsedAtDesc": lastUsedAtDesc,
+	"createdAtAsc":   createdAtAsc,
+	"updatedAtAsc":   updatedAtAsc,
+	"lastUsedAtAsc":  lastUsedAtAsc,
 }
 
 type Repository interface {
@@ -53,9 +76,11 @@ func (g *GormRepository) Update(text *Text) error {
 	return nil
 }
 
-func (g *GormRepository) List() ([]*Text, error) {
+// ORDER BYの条件を気にしない場合は空文字を渡す
+func (g *GormRepository) List(order string) ([]*Text, error) {
+	condition := orderMap[order]
 	var texts []*Text
-	result := g.DB.Find(&texts)
+	result := g.DB.Order(condition).Find(&texts)
 	if result.Error != nil {
 		log.Panicf("failed in saving text to DB: err=%v", result.Error)
 	}

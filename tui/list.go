@@ -3,9 +3,11 @@ package tui
 import (
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/help"
@@ -14,6 +16,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/o-kaisan/text-clipper/common"
 	"github.com/o-kaisan/text-clipper/text"
 	"github.com/o-kaisan/text-clipper/tui/constants"
 )
@@ -29,6 +32,8 @@ type listKeyMap struct {
 	Quit   key.Binding
 	Paste  key.Binding
 	Delete key.Binding
+	Next   key.Binding
+	Prev   key.Binding
 	Edit   key.Binding
 	Help   key.Binding
 	Home   key.Binding
@@ -52,6 +57,14 @@ var listKeys = listKeyMap{
 		key.WithKeys("ctrl+c", "esc"),
 		key.WithHelp("ctrl+c/esc", "quit"),
 	),
+	Next: key.NewBinding(
+		key.WithKeys("→", "l", "pgdown"),
+		key.WithHelp("→/l/pgdown", "next page"),
+	),
+	Prev: key.NewBinding(
+		key.WithKeys("←", "l", "pgup"),
+		key.WithHelp("←/h/pgup", "next page"),
+	),
 	Delete: key.NewBinding(
 		key.WithKeys("ctrl+d"),
 		key.WithHelp("ctrl+d", "delete item"),
@@ -70,7 +83,7 @@ var listKeys = listKeyMap{
 	),
 	Home: key.NewBinding(
 		key.WithKeys("g"),
-		key.WithHelp("g", "home"),
+		key.WithHelp("g", "top"),
 	),
 	End: key.NewBinding(
 		key.WithKeys("G"),
@@ -88,10 +101,9 @@ func (k listKeyMap) ShortHelp() []key.Binding {
 // key.Map interface.
 func (k listKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down},
-		{k.Home, k.End},
-		{k.Select, k.Help},
+		{k.Up, k.Down, k.Home, k.End},
 		{k.Delete, k.Edit, k.Quit},
+		{k.Select, k.Help},
 	}
 }
 
@@ -225,8 +237,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, listKeys.Quit):
 			return m, tea.Quit
+
 		case key.Matches(msg, listKeys.Help):
 			m.help.ShowAll = !m.help.ShowAll
+
 		case key.Matches(msg, listKeys.Edit):
 			var cmds []interface{}
 			cmds = append(cmds, constants.WindowSizeMsg)
@@ -263,13 +277,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, listKeys.Select):
 			items := m.list.Items()
 			if len(items) <= 0 {
+				// アイテムが無ければなにもしない
 				return m, tea.Quit
 			}
+
 			choice := m.list.SelectedItem().(Item)
 			err := clipboard.WriteAll(choice.Content)
 			if err != nil {
 				fmt.Println(fmt.Errorf("failed to clip the text to clipboard: text=%s, err=%w", choice.Content, err))
 			}
+			// 最終利用日時を更新する
+			target := constants.Tr.FindByID(choice.ID)
+			target.LastUsedAt = time.Now()
+			constants.Tr.Update(target)
+
 			// アイテムを選択したらアプリを閉じる
 			return m, tea.Quit
 		}
@@ -292,7 +313,8 @@ func deleteText(tr *text.GormRepository, text *text.Text) error {
 }
 
 func getTextList(tr *text.GormRepository) ([]*text.Text, error) {
-	texts, err := tr.List()
+	order := common.Env("TEXT_CLIPPER_SORT", "createdAtAsc")
+	texts, err := tr.List(order)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get all texts: %w", err)
 	}
