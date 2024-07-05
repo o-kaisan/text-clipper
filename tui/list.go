@@ -261,7 +261,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.list = convertTextsToListItems(texts)
 
 		case key.Matches(msg, listKeys.Select):
-
+			items := m.list.Items()
+			if len(items) <= 0 {
+				return m, tea.Quit
+			}
 			choice := m.list.SelectedItem().(Item)
 			err := clipboard.WriteAll(choice.Content)
 			if err != nil {
