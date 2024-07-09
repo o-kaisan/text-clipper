@@ -3,7 +3,6 @@ package tui
 import (
 	"fmt"
 	"io"
-	"log"
 	"math"
 	"strconv"
 	"strings"
