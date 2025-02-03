@@ -25,7 +25,7 @@ type (
 // ---------------------------------------------------------------
 var (
 	descriptionStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color("#696969"))
-	registerViewStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).PaddingTop(1).PaddingLeft(2).PaddingBottom(1)
+	registerViewStyle = lipgloss.NewStyle().PaddingTop(1).PaddingLeft(2).PaddingBottom(1)
 	blurredStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 	registerHelpStyle = blurredStyle.Copy()
 	validateErrStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))

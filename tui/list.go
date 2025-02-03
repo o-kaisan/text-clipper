@@ -324,7 +324,7 @@ func getTextList(tr *text.GormRepository) ([]*text.Text, error) {
 // View
 // --------------------------------------------------------------------------------
 func (m model) View() string {
-	mainView := lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
+	mainView := lipgloss.NewStyle()
 
 	var choicesWidth int
 	var previewWidth int
@@ -359,6 +359,7 @@ func (m model) choicesView(width int, height int) string {
 }
 
 func (m model) previewView(width int, height int) string {
+
 	preview := ""
 	maxLength := 135
 	maxLines := 2
@@ -369,10 +370,12 @@ func (m model) previewView(width int, height int) string {
 
 	// フィルタリングでItemがあれば選択しているItemの内容をプレビューに表示する
 	if m.list.FilterState() != list.Filtering {
+		// 一部のターミナルで変な改行が入ってしまうので調整用のpadding
+		adjustedPadding := 8
 		if m.list.SelectedItem() != nil {
 			selectedItem := m.list.SelectedItem().(Item)
 			// タイトルとコンテンツの区切り線
-			line := strings.Repeat(" ", width-(preViewPadding*2))
+			line := strings.Repeat(" ", width-(preViewPadding*2)-adjustedPadding)
 			titleStyle := lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, false, true, false)
 
 			preview = selectedItem.Title + titleStyle.Render(line) + "\n" + truncateString(selectedItem.Content, maxLength, maxLines)
