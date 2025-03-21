@@ -36,8 +36,9 @@ var orderMap = map[string]string{
 }
 
 type Repository interface {
-	Get(id uint) error
-	Save(text *Text) error
+	FindByID(id uint)
+	Copy(id uint) error
+	Create(text *Text) error
 	Update(text *Text) error
 	List() ([]*Text, error)
 	Delete(text Text) error
@@ -57,7 +58,33 @@ func (g *GormRepository) FindByID(id uint) *Text {
 	return &text
 }
 
-func (g *GormRepository) Crete(text *Text) error {
+// Copy creates a duplicate of the text with the given ID
+func (g *GormRepository) Copy(id uint) error {
+	var text Text
+	targetText := g.DB.First(&text, id)
+	if targetText.Error != nil {
+		log.Panicf("failed to get text from DB: id=%d, err=%v", id, targetText.Error)
+		return nil
+	}
+
+	now := time.Now()
+	duplicatedText := &Text{
+		Title:      text.Title,
+		Content:    text.Content,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+		LastUsedAt: now,
+	}
+
+	// 新しく作成する
+	result := g.DB.Create(duplicatedText)
+	if result.Error != nil {
+		log.Panicf("failed to create duplicated text in DB: err=%v", result.Error)
+	}
+	return nil
+}
+
+func (g *GormRepository) Create(text *Text) error {
 	result := g.DB.Create(text)
 	if result.Error != nil {
 		log.Panicf("failed to create text in DB: err=%v", result.Error)
@@ -67,8 +94,9 @@ func (g *GormRepository) Crete(text *Text) error {
 
 func (g *GormRepository) Update(text *Text) error {
 	result := g.DB.Model(&Text{}).Where("id = ?", text.ID).Updates(map[string]interface{}{
-		"Title":   text.Title,
-		"Content": text.Content,
+		"Title":      text.Title,
+		"Content":    text.Content,
+		"LastUsedAt": text.LastUsedAt,
 	})
 	if result.Error != nil {
 		log.Panicf("failed to update text in DB: err=%v", result.Error)
