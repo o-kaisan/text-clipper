@@ -150,10 +150,11 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					targetText.UpdatedAt = now
 				} else { // 新規登録
 					targetText = &text.Text{
-						Title:     m.title.Value(),
-						Content:   m.content.Value(),
-						UpdatedAt: now,
-						CreatedAt: now,
+						Title:      m.title.Value(),
+						Content:    m.content.Value(),
+						UpdatedAt:  now,
+						CreatedAt:  now,
+						LastUsedAt: now,
 					}
 				}
 				if len(targetText.Title) > 0 && len(targetText.Content) > 0 {
