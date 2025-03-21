@@ -57,6 +57,32 @@ func (g *GormRepository) FindByID(id uint) *Text {
 	return &text
 }
 
+// Replicate creates a duplicate of the text with the given ID
+func (g *GormRepository) Replicate(id uint) error {
+	var text Text
+	targetText := g.DB.First(&text, id)
+	if targetText.Error != nil {
+		log.Panicf("failed to get text from DB: id=%d, err=%v", id, targetText.Error)
+		return nil
+	}
+
+	now := time.Now()
+	duplicatedText := &Text{
+		Title:      text.Title,
+		Content:    text.Content,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+		LastUsedAt: now,
+	}
+
+	// 新しく作成する
+	result := g.DB.Create(duplicatedText)
+	if result.Error != nil {
+		log.Panicf("failed to create duplicated text in DB: err=%v", result.Error)
+	}
+	return nil
+}
+
 func (g *GormRepository) Crete(text *Text) error {
 	result := g.DB.Create(text)
 	if result.Error != nil {

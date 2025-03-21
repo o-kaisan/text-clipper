@@ -24,19 +24,20 @@ import (
 // Help
 // --------------------------------------------------------------------------------
 type listKeyMap struct {
-	Up     key.Binding
-	Down   key.Binding
-	Select key.Binding
-	Add    key.Binding
-	Quit   key.Binding
-	Paste  key.Binding
-	Delete key.Binding
-	Next   key.Binding
-	Prev   key.Binding
-	Edit   key.Binding
-	Help   key.Binding
-	Home   key.Binding
-	End    key.Binding
+	Up      key.Binding
+	Down    key.Binding
+	Select  key.Binding
+	Add     key.Binding
+	Quit    key.Binding
+	Replica key.Binding
+	Paste   key.Binding
+	Delete  key.Binding
+	Next    key.Binding
+	Prev    key.Binding
+	Edit    key.Binding
+	Help    key.Binding
+	Home    key.Binding
+	End     key.Binding
 }
 
 var listKeys = listKeyMap{
@@ -67,6 +68,10 @@ var listKeys = listKeyMap{
 	Delete: key.NewBinding(
 		key.WithKeys("ctrl+d"),
 		key.WithHelp("ctrl+d", "delete item"),
+	),
+	Replica: key.NewBinding(
+		key.WithKeys("ctrl+r"),
+		key.WithHelp("ctrl+r", "replicate item."),
 	),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
@@ -260,6 +265,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			register := InitialRegister(initialText)
 			return register.Update(cmds)
+
+		case key.Matches(msg, listKeys.Replica):
+			selectedItem := m.list.SelectedItem().(Item)
+			constants.Tr.Replicate(selectedItem.ID) // 複製機能の呼び出し
+
+			texts, err := getTextList(constants.Tr)
+			if err != nil {
+				return nil, func() tea.Msg { return errMsg(err) }
+			}
+			m.list = convertTextsToListItems(texts) // リストを更新
 
 		case key.Matches(msg, listKeys.Delete):
 			// 対象のitemを削除する
