@@ -16,7 +16,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/o-kaisan/text-clipper/common"
-	"github.com/o-kaisan/text-clipper/text"
+	"github.com/o-kaisan/text-clipper/item"
 	"github.com/o-kaisan/text-clipper/tui/constants"
 )
 
@@ -24,6 +24,7 @@ import (
 // Help
 // --------------------------------------------------------------------------------
 type listKeyMap struct {
+	Archive key.Binding
 	Up      key.Binding
 	Down    key.Binding
 	Select  key.Binding
@@ -41,6 +42,10 @@ type listKeyMap struct {
 }
 
 var listKeys = listKeyMap{
+	Archive: key.NewBinding(
+		key.WithKeys("backspace"),
+		key.WithHelp("backspace", "archive item"),
+	),
 	Select: key.NewBinding(
 		key.WithKeys("enter"),
 		key.WithHelp("enter", "select item"),
@@ -106,8 +111,8 @@ func (k listKeyMap) ShortHelp() []key.Binding {
 func (k listKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down, k.Home, k.End},
-		{k.Delete, k.Edit, k.Quit},
-		{k.Select, k.Help},
+		{k.Delete, k.Edit, k.Replica, k.Archive},
+		{k.Select, k.Help, k.Quit},
 	}
 }
 
@@ -130,11 +135,11 @@ var (
 
 // Itemはlist.Itemインターフェースを実装するためのラッパー
 type Item struct {
-	*text.Text
+	*item.Item
 }
 
 func (l Item) FilterValue() string {
-	return l.Text.Title
+	return l.Item.Title
 }
 
 type itemDelegate struct{}
@@ -184,24 +189,23 @@ type model struct {
 
 func InitialList() (model, tea.Cmd) {
 	var m model
-	texts, err := getTextList(constants.Tr)
+	items, err := getActiveItemList(constants.Ir)
 	if err != nil {
 		m.err = fmt.Errorf("failed to initial choice: %w", err)
 		return m, nil
 	}
 
-	// *text.Text のスライスを ListItem のスライスに変換
-	// 検索機能有効化
-	l := convertTextsToListItems(texts)
+	// *item.Item のスライスを ListItem のスライスに変換
+	l := convertItemsToListItems(items)
 	m.list = l
 	m.help = help.New()
 	return m, func() tea.Msg { return errMsg(err) }
 }
 
-func convertTextsToListItems(texts []*text.Text) list.Model {
-	listItems := make([]list.Item, len(texts))
-	for i, text := range texts {
-		listItems[i] = Item{Text: text}
+func convertItemsToListItems(items []*item.Item) list.Model {
+	listItems := make([]list.Item, len(items))
+	for i, item := range items {
+		listItems[i] = Item{Item: item}
 	}
 
 	// リストモデルの初期化 //
@@ -250,43 +254,52 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, constants.WindowSizeMsg)
 			cmds = append(cmds, textinput.Blink)
 			selectedItem := m.list.SelectedItem().(Item)
-			targetText := constants.Tr.FindByID(selectedItem.ID)
-			register := InitialRegister(targetText)
+			targetItem := constants.Ir.FindByID(selectedItem.ID)
+			register := InitialRegister(targetItem)
 			return register.Update(cmds)
 
 		case key.Matches(msg, listKeys.Add):
 			var cmds []interface{}
 			cmds = append(cmds, constants.WindowSizeMsg)
 			cmds = append(cmds, textinput.Blink)
+			var unsetTime time.Time // 登録時に時刻を更新するのでここではゼロ値を設定する
+			initialItem := item.NewItem("", "", true, unsetTime, unsetTime, unsetTime)
 			// 登録画面に遷移
-			initialText := &text.Text{
-				Title:   "",
-				Content: "",
-			}
-			register := InitialRegister(initialText)
+			register := InitialRegister(initialItem)
 			return register.Update(cmds)
 
-		case key.Matches(msg, listKeys.Replica):
+		case key.Matches(msg, listKeys.Archive):
 			selectedItem := m.list.SelectedItem().(Item)
-			constants.Tr.Copy(selectedItem.ID) // 複製機能の呼び出し
+			choice := constants.Ir.FindByID(selectedItem.ID)
+			archiveItem(constants.Ir, choice)
 
-			texts, err := getTextList(constants.Tr)
+			items, err := getActiveItemList(constants.Ir)
 			if err != nil {
 				return nil, func() tea.Msg { return errMsg(err) }
 			}
-			m.list = convertTextsToListItems(texts) // リストを更新
+			m.list = convertItemsToListItems(items)
+
+		case key.Matches(msg, listKeys.Replica):
+			selectedItem := m.list.SelectedItem().(Item)
+			constants.Ir.Copy(selectedItem.ID) // 複製機能の呼び出し
+
+			items, err := getActiveItemList(constants.Ir)
+			if err != nil {
+				return nil, func() tea.Msg { return errMsg(err) }
+			}
+			m.list = convertItemsToListItems(items) // リストを更新
 
 		case key.Matches(msg, listKeys.Delete):
 			// 対象のitemを削除する
 			selectedItem := m.list.SelectedItem().(Item)
-			choice := constants.Tr.FindByID(selectedItem.ID)
-			deleteText(constants.Tr, choice)
+			choice := constants.Ir.FindByID(selectedItem.ID)
+			deleteItem(constants.Ir, choice)
 
-			texts, err := getTextList(constants.Tr)
+			items, err := getActiveItemList(constants.Ir)
 			if err != nil {
 				return nil, func() tea.Msg { return errMsg(err) }
 			}
-			m.list = convertTextsToListItems(texts)
+			m.list = convertItemsToListItems(items)
 
 		case key.Matches(msg, listKeys.Select):
 			items := m.list.Items()
@@ -298,12 +311,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			choice := m.list.SelectedItem().(Item)
 			err := clipboard.WriteAll(choice.Content)
 			if err != nil {
-				fmt.Println(fmt.Errorf("failed to clip the text to clipboard: text=%s, err=%w", choice.Content, err))
+				fmt.Println(fmt.Errorf("failed to clip the item to clipboard: item=%s, err=%w", choice.Content, err))
 			}
 			// 最終利用日時を更新する
-			target := constants.Tr.FindByID(choice.ID)
+			target := constants.Ir.FindByID(choice.ID)
 			target.LastUsedAt = time.Now()
-			constants.Tr.Update(target)
+			constants.Ir.Update(target)
 
 			// アイテムを選択したらアプリを閉じる
 			return m, tea.Quit
@@ -318,21 +331,30 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func deleteText(tr *text.GormRepository, text *text.Text) error {
-	err := tr.Delete(text)
+func archiveItem(ir *item.ItemRepository, item *item.Item) error {
+	item.IsActive = false // 無効化する
+	err := ir.Update(item)
 	if err != nil {
-		return fmt.Errorf("cannot delete item: title=%s id=%d err=%w", text.Title, text.ID, err)
+		return fmt.Errorf("cannot delete item: title=%s id=%d err=%w", item.Title, item.ID, err)
 	}
 	return nil
 }
 
-func getTextList(tr *text.GormRepository) ([]*text.Text, error) {
-	order := common.Env("TEXT_CLIPPER_SORT", "createdAtDesc")
-	texts, err := tr.List(order)
+func deleteItem(ir *item.ItemRepository, item *item.Item) error {
+	err := ir.Delete(item)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get all texts: %w", err)
+		return fmt.Errorf("cannot delete item: title=%s id=%d err=%w", item.Title, item.ID, err)
 	}
-	return texts, nil
+	return nil
+}
+
+func getActiveItemList(ir *item.ItemRepository) ([]*item.Item, error) {
+	order := common.Env("TEXT_CLIPPER_SORT", "createdAtDesc")
+	items, err := ir.List(order)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get all items: %w", err)
+	}
+	return items, nil
 }
 
 // --------------------------------------------------------------------------------

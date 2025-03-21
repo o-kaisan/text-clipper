@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/o-kaisan/text-clipper/common"
-	"github.com/o-kaisan/text-clipper/text"
+	"github.com/o-kaisan/text-clipper/item"
 	"github.com/o-kaisan/text-clipper/tui"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -34,7 +34,7 @@ func openSqlite() (*gorm.DB, error) {
 		return nil, fmt.Errorf("unable to open database: %w", err)
 	}
 
-	err = db.AutoMigrate(&text.Text{})
+	err = db.AutoMigrate(&item.Item{})
 	if err != nil {
 		return db, fmt.Errorf("unable to migrate database: %w", err)
 	}
@@ -66,6 +66,6 @@ func main() {
 		log.Fatal(err)
 		os.Exit(1)
 	}
-	tr := text.GormRepository{DB: db}
+	tr := item.ItemRepository{DB: db}
 	tui.StartTea(tr)
 }

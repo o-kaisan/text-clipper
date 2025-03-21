@@ -2,10 +2,10 @@ package constants
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/o-kaisan/text-clipper/text"
+	"github.com/o-kaisan/text-clipper/item"
 )
 
 var (
-	Tr            *text.GormRepository
+	Ir            *item.ItemRepository
 	WindowSizeMsg tea.WindowSizeMsg
 )
