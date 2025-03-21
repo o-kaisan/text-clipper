@@ -169,10 +169,10 @@ This configuration defines various criteria for sorting a list. By using the env
 
 | Key            | Description                                 |
 |----------------|---------------------------------------------|
-| createdAtAsc(Default)   | Sort by creation date in ascending order    |
+| createdAtAsc   | Sort by creation date in ascending order    |
 | updatedAtAsc   | Sort by update date in ascending order      |
 | lastUsedAtAsc  | Sort by last used date in ascending order   |
-| createdAtDesc  | Sort by creation date in descending order   |
+| createdAtDesc(Default)  | Sort by creation date in descending order   |
 | updatedAtDesc  | Sort by update date in descending order     |
 | lastUsedAtDesc | Sort by last used date in descending order  |
 
@@ -181,9 +181,9 @@ This configuration defines various criteria for sorting a list. By using the env
 **Bash:**
 
 ```bash
-export TEXT_CLIPPER_SORT="createdAtDesc"
+export TEXT_CLIPPER_SORT="createdAtAsc"
 
 **Fish:**
 
 ```fish
-set -x TEXT_CLIPPER_SORT createdAtDesc
+set -x TEXT_CLIPPER_SORT createdAtAsc

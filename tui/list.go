@@ -312,7 +312,7 @@ func deleteText(tr *text.GormRepository, text *text.Text) error {
 }
 
 func getTextList(tr *text.GormRepository) ([]*text.Text, error) {
-	order := common.Env("TEXT_CLIPPER_SORT", "createdAtAsc")
+	order := common.Env("TEXT_CLIPPER_SORT", "createdAtDesc")
 	texts, err := tr.List(order)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get all texts: %w", err)
