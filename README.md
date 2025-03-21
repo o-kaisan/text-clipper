@@ -182,6 +182,7 @@ This configuration defines various criteria for sorting a list. By using the env
 
 ```bash
 export TEXT_CLIPPER_SORT="createdAtAsc"
+```
 
 **Fish:**
 
