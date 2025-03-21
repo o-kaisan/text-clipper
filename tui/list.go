@@ -268,7 +268,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(msg, listKeys.Replica):
 			selectedItem := m.list.SelectedItem().(Item)
-			constants.Tr.Replicate(selectedItem.ID) // 複製機能の呼び出し
+			constants.Tr.Copy(selectedItem.ID) // 複製機能の呼び出し
 
 			texts, err := getTextList(constants.Tr)
 			if err != nil {

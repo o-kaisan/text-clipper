@@ -224,7 +224,7 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func saveOrUpdateText(tr *text.GormRepository, text *text.Text) error {
 	var err error
 	if text.ID == 0 {
-		err = tr.Crete(text)
+		err = tr.Create(text)
 	} else {
 		err = tr.Update(text)
 	}

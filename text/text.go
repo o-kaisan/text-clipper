@@ -36,8 +36,9 @@ var orderMap = map[string]string{
 }
 
 type Repository interface {
-	Get(id uint) error
-	Save(text *Text) error
+	FindByID(id uint)
+	Copy(id uint) error
+	Create(text *Text) error
 	Update(text *Text) error
 	List() ([]*Text, error)
 	Delete(text Text) error
@@ -57,8 +58,8 @@ func (g *GormRepository) FindByID(id uint) *Text {
 	return &text
 }
 
-// Replicate creates a duplicate of the text with the given ID
-func (g *GormRepository) Replicate(id uint) error {
+// Copy creates a duplicate of the text with the given ID
+func (g *GormRepository) Copy(id uint) error {
 	var text Text
 	targetText := g.DB.First(&text, id)
 	if targetText.Error != nil {
@@ -83,7 +84,7 @@ func (g *GormRepository) Replicate(id uint) error {
 	return nil
 }
 
-func (g *GormRepository) Crete(text *Text) error {
+func (g *GormRepository) Create(text *Text) error {
 	result := g.DB.Create(text)
 	if result.Error != nil {
 		log.Panicf("failed to create text in DB: err=%v", result.Error)
