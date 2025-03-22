@@ -24,8 +24,8 @@ type (
 // Style
 // ---------------------------------------------------------------
 var (
-	descriptionStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color("#696969"))
-	registerViewStyle = lipgloss.NewStyle().PaddingTop(1).PaddingLeft(2).PaddingBottom(1)
+	descriptionStyle  = lipgloss.NewStyle().PaddingLeft(1).Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color("#696969"))
+	registerViewStyle = lipgloss.NewStyle().PaddingLeft(1).PaddingBottom(1)
 	blurredStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 	registerHelpStyle = blurredStyle.Copy()
 	validateErrStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
@@ -230,6 +230,11 @@ func saveOrUpdateText(tr *item.ItemRepository, text *item.Item) error {
 // View
 // --------------------------------------------------------------------------------
 func (m Register) View() string {
+	descriptionMessage := "# Register a new item. "
+	if m.textId != 0 {
+		descriptionMessage = "# Edit the selected item. "
+	}
+
 	registerViewWidth := m.width - 5
 	registerViewHeight := 18
 	helpWidth := m.width - 5
@@ -243,7 +248,7 @@ func (m Register) View() string {
 	m.content.SetWidth(registerViewWidth - 3)
 
 	var b strings.Builder
-	b.WriteString(descriptionStyle.Render("Register your new item."))
+	b.WriteString(descriptionStyle.MarginLeft(-1).Render(descriptionMessage))
 	b.WriteString("\n\n")
 	b.WriteString(m.title.View())
 	b.WriteString("\n\n")
