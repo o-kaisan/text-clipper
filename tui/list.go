@@ -43,12 +43,12 @@ type listKeyMap struct {
 
 var listKeys = listKeyMap{
 	Archive: key.NewBinding(
-		key.WithKeys("ctrl+l"),
-		key.WithHelp("ctrl+l", "archive item"),
+		key.WithKeys("tab"),
+		key.WithHelp("tab", "move to archive view"),
 	),
 	Deactivate: key.NewBinding(
-		key.WithKeys("delete"),
-		key.WithHelp("delete", "move to archive item list"),
+		key.WithKeys("ctrl+d"),
+		key.WithHelp("ctrl+d", "archive item"),
 	),
 	Select: key.NewBinding(
 		key.WithKeys("enter"),
@@ -75,8 +75,8 @@ var listKeys = listKeyMap{
 		key.WithHelp("←/h/pgup", "next page"),
 	),
 	Copy: key.NewBinding(
-		key.WithKeys("ctrl+v"),
-		key.WithHelp("ctrl+v", "copy item."),
+		key.WithKeys("ctrl+y"),
+		key.WithHelp("ctrl+y", "copy item."),
 	),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
@@ -111,8 +111,8 @@ func (k listKeyMap) ShortHelp() []key.Binding {
 func (k listKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down, k.Home, k.End},
-		{k.Add, k.Edit, k.Copy, k.Deactivate},
-		{k.Select, k.Help, k.Quit},
+		{k.Add, k.Edit, k.Copy, k.Deactivate, k.Archive},
+		{k.Select, k.Quit, k.Help},
 	}
 }
 
@@ -120,13 +120,15 @@ func (k listKeyMap) FullHelp() [][]key.Binding {
 // Style
 // ---------------------------------------------------------------
 var (
-	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
-	noItemStyle       = lipgloss.NewStyle().PaddingLeft(2).Width(38)
-	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
-	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	preViewPadding    = 1
-	previewStyle      = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, false, false, true).MarginLeft(4).MarginRight(1).Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color("#696969")).MarginTop(1).Padding(preViewPadding)
-	listHelpStyle     = lipgloss.NewStyle().PaddingLeft(2).PaddingTop(1).PaddingBottom(1).Height(5)
+	itemStyle          = lipgloss.NewStyle().PaddingLeft(4)
+	noItemStyle        = lipgloss.NewStyle().PaddingLeft(2).Width(38)
+	selectedItemStyle  = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
+	paginationStyle    = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+	preViewPadding     = 1
+	listTitleStyle     = lipgloss.NewStyle().Reverse(true).PaddingLeft(1).Italic(true).Width(18).Background(lipgloss.Color("#"))
+	listTitleViewStyle = lipgloss.NewStyle().PaddingLeft(1).PaddingBottom(1)
+	previewStyle       = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, false, false, true).MarginLeft(4).MarginRight(1).Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color("#696969")).MarginTop(1).Padding(preViewPadding)
+	listHelpStyle      = lipgloss.NewStyle().PaddingLeft(2).PaddingTop(1).PaddingBottom(1).Height(5)
 )
 
 // ---------------------------------------------------------------
@@ -377,15 +379,18 @@ func getActiveItemList(ir *item.ItemRepository) ([]*item.Item, error) {
 func (m model) View() string {
 	mainView := lipgloss.NewStyle()
 
+	var titleWidth int
 	var choicesWidth int
 	var previewWidth int
 	var helpWidth int
 	if m.width <= 80 {
 		// 最低限の幅を設定する
+		titleWidth = 85
 		choicesWidth = 45
 		previewWidth = 35
-		helpWidth = 80
+		helpWidth = 85
 	} else {
+		titleWidth = m.width
 		// choicesViewが画面の2/3の幅を使用
 		// choicesWidth = m.width * 1 / 3
 		choicesWidth = 45
@@ -394,18 +399,23 @@ func (m model) View() string {
 		helpWidth = m.width
 	}
 
+	title := m.titleView(titleWidth)
 	choices := m.choicesView(choicesWidth, m.height-6)
 	preview := m.previewView(previewWidth, m.height-6)
 	help := m.helpView(helpWidth)
 
-	return mainView.Render(lipgloss.JoinHorizontal(lipgloss.Top, choices, preview) + "\n" + help)
+	return mainView.Render(title + lipgloss.JoinHorizontal(lipgloss.Top, choices, preview) + "\n" + help)
+}
+
+func (m model) titleView(width int) string {
+	title := listTitleStyle.Render("# Active Items")
+	return listTitleViewStyle.Width(width - 3).Render(title)
 }
 
 func (m model) choicesView(width int, height int) string {
 	// リストの画面サイズ
 	m.list.SetWidth(width)
-	m.list.SetHeight(height) // m.list.Styles.Title.Width(30)
-
+	m.list.SetHeight(height)
 	return lipgloss.NewStyle().Render(m.list.View())
 }
 

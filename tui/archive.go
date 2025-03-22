@@ -87,8 +87,8 @@ func (k archiveKeyMap) ShortHelp() []key.Binding {
 func (k archiveKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down, k.Home, k.End},
-		{k.restore, k.Delete, k.restore},
-		{k.Help, k.Back},
+		{k.restore, k.Delete},
+		{k.Back, k.Help},
 	}
 }
 
@@ -96,13 +96,15 @@ func (k archiveKeyMap) FullHelp() [][]key.Binding {
 // Style
 // ---------------------------------------------------------------
 var (
-	archiveItemStyle         = lipgloss.NewStyle().PaddingLeft(4)
-	archiveNoItemStyle       = lipgloss.NewStyle().PaddingLeft(2).Width(38)
-	archiveSelectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("127"))
-	archivePaginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	archivePreViewPadding    = 1
-	archivePreviewStyle      = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, false, false, true).MarginLeft(4).MarginRight(1).Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color("#af00af")).MarginTop(1).Padding(archivePreViewPadding)
-	archiveListHelpStyle     = lipgloss.NewStyle().PaddingLeft(2).PaddingTop(1).PaddingBottom(1).Height(5)
+	archiveItemStyle          = lipgloss.NewStyle().PaddingLeft(4)
+	archiveNoItemStyle        = lipgloss.NewStyle().PaddingLeft(2).Width(38)
+	archiveSelectedItemStyle  = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("127"))
+	archivePaginationStyle    = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+	archivePreViewPadding     = 1
+	archiveListTitleStyle     = lipgloss.NewStyle().Reverse(true).PaddingLeft(1).Italic(true).Width(18).Foreground(lipgloss.Color("#af00af"))
+	archiveListTitleViewStyle = lipgloss.NewStyle().PaddingLeft(1).PaddingBottom(1)
+	archivePreviewStyle       = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, false, false, true).MarginLeft(4).MarginRight(1).Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color("#af00af")).MarginTop(1).Padding(archivePreViewPadding)
+	archiveListHelpStyle      = lipgloss.NewStyle().PaddingLeft(2).PaddingTop(1).PaddingBottom(1).Height(5)
 )
 
 // ---------------------------------------------------------------
@@ -295,15 +297,18 @@ func getInActiveItemList(ir *item.ItemRepository) ([]*item.Item, error) {
 func (m archive) View() string {
 	mainView := lipgloss.NewStyle()
 
+	var titleWidth int
 	var choicesWidth int
 	var previewWidth int
 	var helpWidth int
 	if m.width <= 80 {
 		// 最低限の幅を設定する
+		titleWidth = 85
 		choicesWidth = 45
 		previewWidth = 35
-		helpWidth = 80
+		helpWidth = 85
 	} else {
+		titleWidth = m.width
 		// choicesViewが画面の2/3の幅を使用
 		// choicesWidth = m.width * 1 / 3
 		choicesWidth = 45
@@ -312,18 +317,23 @@ func (m archive) View() string {
 		helpWidth = m.width
 	}
 
+	title := m.titleView(titleWidth)
 	choices := m.choicesView(choicesWidth, m.height-6)
 	preview := m.previewView(previewWidth, m.height-6)
 	help := m.helpView(helpWidth)
 
-	return mainView.Render(lipgloss.JoinHorizontal(lipgloss.Top, choices, preview) + "\n" + help)
+	return mainView.Render(title + lipgloss.JoinHorizontal(lipgloss.Top, choices, preview) + "\n" + help)
+}
+
+func (m archive) titleView(width int) string {
+	title := archiveListTitleStyle.Render("# Archived Items")
+	return archiveListTitleViewStyle.Width(width - 3).Render(title)
 }
 
 func (m archive) choicesView(width int, height int) string {
 	// リストの画面サイズ
 	m.list.SetWidth(width)
-	m.list.SetHeight(height) // m.list.Styles.Title.Width(30)
-
+	m.list.SetHeight(height)
 	return lipgloss.NewStyle().Render(m.list.View())
 }
 
