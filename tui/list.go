@@ -263,7 +263,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, constants.WindowSizeMsg)
 			cmds = append(cmds, textinput.Blink)
 			var unsetTime time.Time // 登録時に時刻を更新するのでここではゼロ値を設定する
-			initialItem := item.NewItem("", "", true, unsetTime, unsetTime, unsetTime)
+			initialItem := item.NewItem("", "", constants.True, unsetTime, unsetTime, unsetTime)
 			// 登録画面に遷移
 			register := InitialRegister(initialItem)
 			return register.Update(cmds)
@@ -332,7 +332,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func archiveItem(ir *item.ItemRepository, item *item.Item) error {
-	item.IsActive = false // 無効化する
+	item.IsActive = constants.False // 無効化する
 	err := ir.Update(item)
 	if err != nil {
 		return fmt.Errorf("cannot delete item: title=%s id=%d err=%w", item.Title, item.ID, err)

@@ -147,7 +147,7 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					targetText.Content = m.content.Value()
 					targetText.UpdatedAt = now
 				} else { // 新規登録
-					targetText = item.NewItem(m.title.Value(), m.content.Value(), true, now, now, now)
+					targetText = item.NewItem(m.title.Value(), m.content.Value(), constants.True, now, now, now)
 				}
 				if len(targetText.Title) > 0 && len(targetText.Content) > 0 {
 					err := saveOrUpdateText(constants.Ir, targetText)

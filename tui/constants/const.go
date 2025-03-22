@@ -8,4 +8,11 @@ import (
 var (
 	Ir            *item.ItemRepository
 	WindowSizeMsg tea.WindowSizeMsg
+	True          = boolPtr(true)
+	False         = boolPtr(false)
 )
+
+// bool のポインタを作成するヘルパー関数
+func boolPtr(v bool) *bool {
+	return &v
+}
