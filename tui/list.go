@@ -111,8 +111,8 @@ func (k listKeyMap) ShortHelp() []key.Binding {
 func (k listKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down, k.Home, k.End},
-		{k.Add, k.Edit, k.Copy, k.Deactivate, k.Archive},
-		{k.Select, k.Quit, k.Help},
+		{k.Add, k.Edit, k.Copy, k.Deactivate},
+		{k.Archive, k.Select, k.Quit, k.Help},
 	}
 }
 
