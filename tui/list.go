@@ -24,27 +24,31 @@ import (
 // Help
 // --------------------------------------------------------------------------------
 type listKeyMap struct {
-	Archive key.Binding
-	Up      key.Binding
-	Down    key.Binding
-	Select  key.Binding
-	Add     key.Binding
-	Quit    key.Binding
-	Replica key.Binding
-	Paste   key.Binding
-	Delete  key.Binding
-	Next    key.Binding
-	Prev    key.Binding
-	Edit    key.Binding
-	Help    key.Binding
-	Home    key.Binding
-	End     key.Binding
+	Deactivate key.Binding
+	Archive    key.Binding
+	Up         key.Binding
+	Down       key.Binding
+	Select     key.Binding
+	Add        key.Binding
+	Quit       key.Binding
+	Copy       key.Binding
+	Paste      key.Binding
+	Next       key.Binding
+	Prev       key.Binding
+	Edit       key.Binding
+	Help       key.Binding
+	Home       key.Binding
+	End        key.Binding
 }
 
 var listKeys = listKeyMap{
 	Archive: key.NewBinding(
-		key.WithKeys("backspace"),
-		key.WithHelp("backspace", "archive item"),
+		key.WithKeys("ctrl+l"),
+		key.WithHelp("ctrl+l", "archive item"),
+	),
+	Deactivate: key.NewBinding(
+		key.WithKeys("delete"),
+		key.WithHelp("delete", "move to archive item list"),
 	),
 	Select: key.NewBinding(
 		key.WithKeys("enter"),
@@ -70,13 +74,9 @@ var listKeys = listKeyMap{
 		key.WithKeys("←", "l", "pgup"),
 		key.WithHelp("←/h/pgup", "next page"),
 	),
-	Delete: key.NewBinding(
-		key.WithKeys("ctrl+d"),
-		key.WithHelp("ctrl+d", "delete item"),
-	),
-	Replica: key.NewBinding(
-		key.WithKeys("ctrl+r"),
-		key.WithHelp("ctrl+r", "replicate item."),
+	Copy: key.NewBinding(
+		key.WithKeys("ctrl+v"),
+		key.WithHelp("ctrl+v", "copy item."),
 	),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
@@ -111,7 +111,7 @@ func (k listKeyMap) ShortHelp() []key.Binding {
 func (k listKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down, k.Home, k.End},
-		{k.Delete, k.Edit, k.Replica, k.Archive},
+		{k.Add, k.Edit, k.Copy, k.Deactivate},
 		{k.Select, k.Help, k.Quit},
 	}
 }
@@ -199,6 +199,7 @@ func InitialList() (model, tea.Cmd) {
 	l := convertItemsToListItems(items)
 	m.list = l
 	m.help = help.New()
+	m.help.ShowAll = true // フルヘルプをはじめから表示する
 	return m, func() tea.Msg { return errMsg(err) }
 }
 
@@ -251,12 +252,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(msg, listKeys.Edit):
 			var cmds []interface{}
+			// アイテムが無ければなにもしない
+			items := m.list.Items()
+			if len(items) <= 0 {
+				choice, _ := InitialList()
+				return choice.Update(constants.WindowSizeMsg)
+			}
 			cmds = append(cmds, constants.WindowSizeMsg)
 			cmds = append(cmds, textinput.Blink)
 			selectedItem := m.list.SelectedItem().(Item)
 			targetItem := constants.Ir.FindByID(selectedItem.ID)
 			register := InitialRegister(targetItem)
 			return register.Update(cmds)
+
+		case key.Matches(msg, listKeys.Archive):
+			choice, _ := InitialArchive()
+			return choice.Update(constants.WindowSizeMsg)
 
 		case key.Matches(msg, listKeys.Add):
 			var cmds []interface{}
@@ -268,46 +279,49 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			register := InitialRegister(initialItem)
 			return register.Update(cmds)
 
-		case key.Matches(msg, listKeys.Archive):
+		case key.Matches(msg, listKeys.Deactivate):
+			// アイテムが無ければなにもしない
+			items := m.list.Items()
+			if len(items) <= 0 {
+				choice, _ := InitialList()
+				return choice.Update(constants.WindowSizeMsg)
+			}
+
+			// 選択したアイテムを取得
 			selectedItem := m.list.SelectedItem().(Item)
 			choice := constants.Ir.FindByID(selectedItem.ID)
 			archiveItem(constants.Ir, choice)
 
-			items, err := getActiveItemList(constants.Ir)
+			ActiveItems, err := getActiveItemList(constants.Ir)
 			if err != nil {
 				return nil, func() tea.Msg { return errMsg(err) }
 			}
-			m.list = convertItemsToListItems(items)
+			m.list = convertItemsToListItems(ActiveItems)
 
-		case key.Matches(msg, listKeys.Replica):
+		case key.Matches(msg, listKeys.Copy):
+			// アイテムが無ければなにもしない
+			items := m.list.Items()
+			if len(items) <= 0 {
+				choice, _ := InitialList()
+				return choice.Update(constants.WindowSizeMsg)
+			}
+			// 選択したアイテムを取得
 			selectedItem := m.list.SelectedItem().(Item)
 			constants.Ir.Copy(selectedItem.ID) // 複製機能の呼び出し
 
-			items, err := getActiveItemList(constants.Ir)
+			ActiveItems, err := getActiveItemList(constants.Ir)
 			if err != nil {
 				return nil, func() tea.Msg { return errMsg(err) }
 			}
-			m.list = convertItemsToListItems(items) // リストを更新
-
-		case key.Matches(msg, listKeys.Delete):
-			// 対象のitemを削除する
-			selectedItem := m.list.SelectedItem().(Item)
-			choice := constants.Ir.FindByID(selectedItem.ID)
-			deleteItem(constants.Ir, choice)
-
-			items, err := getActiveItemList(constants.Ir)
-			if err != nil {
-				return nil, func() tea.Msg { return errMsg(err) }
-			}
-			m.list = convertItemsToListItems(items)
+			m.list = convertItemsToListItems(ActiveItems) // リストを更新
 
 		case key.Matches(msg, listKeys.Select):
+			// アイテムが無ければなにもしない
 			items := m.list.Items()
 			if len(items) <= 0 {
-				// アイテムが無ければなにもしない
 				return m, tea.Quit
 			}
-
+			// 選択したアイテムを取得
 			choice := m.list.SelectedItem().(Item)
 			err := clipboard.WriteAll(choice.Content)
 			if err != nil {
@@ -350,7 +364,7 @@ func deleteItem(ir *item.ItemRepository, item *item.Item) error {
 
 func getActiveItemList(ir *item.ItemRepository) ([]*item.Item, error) {
 	order := common.Env("TEXT_CLIPPER_SORT", "createdAtDesc")
-	items, err := ir.List(order)
+	items, err := ir.ListOfActive(order)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get all items: %w", err)
 	}

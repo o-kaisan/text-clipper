@@ -76,11 +76,23 @@ func (g *ItemRepository) Update(item *Item) error {
 	return nil
 }
 
-// ORDER BYの条件を気にしない場合は空文字を渡す
-func (g *ItemRepository) List(order string) ([]*Item, error) {
+func (g *ItemRepository) ListOfActive(order string) ([]*Item, error) {
+	// ORDER BYの条件を気にしない場合はorderに空文字を渡す
 	condition := OrderMaps[order]
 	var items []*Item
-	result := g.DB.Order(condition).Find(&items)
+	result := g.DB.Order(condition).Where("is_active = ?", true).Find(&items)
+	if result.Error != nil {
+		log.Panicf("failed in saving item to DB: err=%v", result.Error)
+	}
+
+	return items, nil
+}
+
+func (g *ItemRepository) ListOfInactive(order string) ([]*Item, error) {
+	// ORDER BYの条件を気にしない場合はorderに空文字を渡す
+	condition := OrderMaps[order]
+	var items []*Item
+	result := g.DB.Order(condition).Where("is_active = ?", false).Find(&items)
 	if result.Error != nil {
 		log.Panicf("failed in saving item to DB: err=%v", result.Error)
 	}
