@@ -12,7 +12,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/o-kaisan/text-clipper/text"
+	"github.com/o-kaisan/text-clipper/item"
 	"github.com/o-kaisan/text-clipper/tui/constants"
 )
 
@@ -88,7 +88,7 @@ type Register struct {
 	validateErr  string
 }
 
-func InitialRegister(text *text.Text) Register {
+func InitialRegister(text *item.Item) Register {
 	ti := textinput.New()
 	ti.Focus()
 	ti.CharLimit = 30
@@ -139,26 +139,18 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, registerKeys.Submit):
 			// submitにフォーカスがある場合に登録処理を実行する
 			if m.focusedIndex == m.maxIndex {
-				var targetText *text.Text
-
 				now := time.Now()
-				// 上書き更新
-				if m.textId != 0 {
-					targetText = constants.Tr.FindByID(m.textId)
+				var targetText *item.Item
+				if m.textId != 0 { // 上書き更新
+					targetText = constants.Ir.FindByID(m.textId)
 					targetText.Title = m.title.Value()
 					targetText.Content = m.content.Value()
 					targetText.UpdatedAt = now
 				} else { // 新規登録
-					targetText = &text.Text{
-						Title:      m.title.Value(),
-						Content:    m.content.Value(),
-						UpdatedAt:  now,
-						CreatedAt:  now,
-						LastUsedAt: now,
-					}
+					targetText = item.NewItem(m.title.Value(), m.content.Value(), constants.True, now, now, now)
 				}
 				if len(targetText.Title) > 0 && len(targetText.Content) > 0 {
-					err := saveOrUpdateText(constants.Tr, targetText)
+					err := saveOrUpdateText(constants.Ir, targetText)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -221,7 +213,7 @@ func (m Register) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func saveOrUpdateText(tr *text.GormRepository, text *text.Text) error {
+func saveOrUpdateText(tr *item.ItemRepository, text *item.Item) error {
 	var err error
 	if text.ID == 0 {
 		err = tr.Create(text)
