@@ -125,9 +125,9 @@ var (
 	selectedItemStyle  = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
 	paginationStyle    = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 	preViewPadding     = 1
-	listTitleStyle     = lipgloss.NewStyle().Reverse(true).PaddingLeft(1).Italic(true).Width(18).Background(lipgloss.Color("#"))
+	listTitleStyle     = lipgloss.NewStyle().Reverse(true).PaddingLeft(1).Italic(true).Width(18).Foreground(lipgloss.Color(constants.BgColor))
 	listTitleViewStyle = lipgloss.NewStyle().PaddingLeft(1).PaddingBottom(1)
-	previewStyle       = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, false, false, true).MarginLeft(4).MarginRight(1).Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color("#696969")).MarginTop(1).Padding(preViewPadding)
+	previewStyle       = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, false, false, true).MarginLeft(4).MarginRight(1).Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color(constants.BgColor)).MarginTop(1).Padding(preViewPadding)
 	listHelpStyle      = lipgloss.NewStyle().PaddingLeft(2).PaddingTop(1).PaddingBottom(1).Height(5)
 )
 

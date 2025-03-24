@@ -45,7 +45,6 @@ go install github.com/o-kaisan/text-clipper@latest
 #### For WSL Settings to Use Text Clipper
 
 In a WSL environment, `atotto/clipboard` did not work. Here, settings for both `bash` and `fish` are prepared, so add them according to your environment. The mechanism executes the WSL clipboard functionality (write) using the `xclip` command. As a prerequisite, ensure that the clipboard functionality (write) is available with `clip.exe`.
-Reference:[[wsl] 地味に便利なclip.exeでのテキストコピー](https://qiita.com/sasaki_hir/items/45885960b46f87226fd8)
 *Note: If you are using `xclip` or `xsel` with other tools, check their impact before proceeding.
 
 ##### Common
@@ -119,6 +118,26 @@ set -x TEXT_CLIPPER_PATH /home/hoge
 
 To make this setting permanent, add the above command to the appropriate shell configuration file (e.g., .bashrc, .bash_profile, or config.fish).
 
+## Customizing the Preview Background
+
+
+Bash
+
+```bash
+# list viewの背景色
+export TEXT_CLIPPER_BG_COLOR=#696969
+
+# archive viewの背景色
+export TEXT_CLIPPER_ARCHIVE_BG_COLOR=#af00af
+```
+
+fish
+
+```bash
+set -x TEXT_CLIPPER_PREVIEW_BG_COLOR '#696969'
+set -x TEXT_CLIPPER_PREVIEW_ARCHIVE_BG_COLOR '#af00af'
+```
+
 ## Usage
 
 - run
@@ -137,9 +156,12 @@ To make this setting permanent, add the above command to the appropriate shell c
     | ↑/k | up |
     | g | top |
     | G | end |
-    | ctrl+a | add new item |
+    | ctrl+a | add new item(move to register view) |
     | ctrl+e | edit item |
-    | ctrl+d | delete item |
+    | ctrl+y | copy item |
+    | ctrl+d | archive item |
+    | tab | move to archive view |
+    | Enter | clip the text to clipboard |
     | / | filter |
     | q/ctrl+c | quit |
     | ? | more help |
@@ -160,6 +182,22 @@ To make this setting permanent, add the above command to the appropriate shell c
     - 30 character limit
   - contents
     - no limit
+
+### archive view
+
+- key binding
+
+    | key | description |
+    | --- | --- |
+    | ↓/j | down |
+    | ↑/k | up |
+    | g | top |
+    | G | end |
+    | ctrl+d | delete item |
+    | tab | move to archive view |
+    | / | filter |
+    | q/ctrl+c | back to list view |
+    | ? | more help |
 
 ### List Sorting Functionality
 

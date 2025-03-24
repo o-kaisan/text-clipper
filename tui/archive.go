@@ -101,9 +101,9 @@ var (
 	archiveSelectedItemStyle  = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("127"))
 	archivePaginationStyle    = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 	archivePreViewPadding     = 1
-	archiveListTitleStyle     = lipgloss.NewStyle().Reverse(true).PaddingLeft(1).Italic(true).Width(18).Foreground(lipgloss.Color("#af00af"))
+	archiveListTitleStyle     = lipgloss.NewStyle().Reverse(true).PaddingLeft(1).Italic(true).Width(18).Foreground(lipgloss.Color(constants.ArchiveBgColor))
 	archiveListTitleViewStyle = lipgloss.NewStyle().PaddingLeft(1).PaddingBottom(1)
-	archivePreviewStyle       = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, false, false, true).MarginLeft(4).MarginRight(1).Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color("#af00af")).MarginTop(1).Padding(archivePreViewPadding)
+	archivePreviewStyle       = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, false, false, true).MarginLeft(4).MarginRight(1).Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color(constants.ArchiveBgColor)).MarginTop(1).Padding(archivePreViewPadding)
 	archiveListHelpStyle      = lipgloss.NewStyle().PaddingLeft(2).PaddingTop(1).PaddingBottom(1).Height(5)
 )
 
