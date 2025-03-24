@@ -13,10 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	Version = "2.0.2"
-)
-
 func openSqlite() (*gorm.DB, error) {
 
 	dbPath, err := common.GetPathFromPath("text-clipper.db")
@@ -57,7 +53,7 @@ func main() {
 		fmt.Println(common.USAGE)
 		os.Exit(0)
 	case opts.Version:
-		fmt.Println("text-clipper version " + Version)
+		fmt.Println("text-clipper version " + common.GetVersionFromGit())
 		os.Exit(0)
 	}
 
