@@ -118,7 +118,7 @@ set -x TEXT_CLIPPER_PATH /home/hoge
 
 To make this setting permanent, add the above command to the appropriate shell configuration file (e.g., .bashrc, .bash_profile, or config.fish).
 
-## Customizing the Preview Background
+## Customizing the Preview Background Color
 
 
 Bash
