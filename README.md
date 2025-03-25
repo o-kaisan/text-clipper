@@ -8,7 +8,7 @@
 
 - WSL 22.04(LTS)
 - Windows 11
-- Go 1.22.1
+- Go 1.24.1
 
 ## Windows Setup
 
