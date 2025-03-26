@@ -8,6 +8,7 @@ import (
 
 	"github.com/o-kaisan/text-clipper/common"
 	"github.com/o-kaisan/text-clipper/di"
+	"github.com/o-kaisan/text-clipper/model"
 	"github.com/o-kaisan/text-clipper/tui/app"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -30,7 +31,7 @@ func openSqlite() (*gorm.DB, error) {
 		return nil, fmt.Errorf("unable to open database: %w", err)
 	}
 
-	err = db.AutoMigrate(&item.Item{})
+	err = db.AutoMigrate(&model.Clip{})
 	if err != nil {
 		return db, fmt.Errorf("unable to migrate database: %w", err)
 	}
