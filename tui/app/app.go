@@ -1,4 +1,4 @@
-package tui
+package app
 
 import (
 	"log"
@@ -7,12 +7,12 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/o-kaisan/text-clipper/common"
-	"github.com/o-kaisan/text-clipper/item"
+	"github.com/o-kaisan/text-clipper/di"
 	"github.com/o-kaisan/text-clipper/tui/constants"
 )
 
 // StartTea the entry point for the UI. Initializes the model.
-func StartTea(tr item.ItemRepository) error {
+func StartTea(c di.Container) error {
 
 	// ログ出力設定
 	debug_env := os.Getenv("TEXT_CLIPPER_DEBUG")

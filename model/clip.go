@@ -1,4 +1,4 @@
-package item
+package model
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Item struct {
+type Clip struct {
 	gorm.Model
 	Title      string
 	Content    string
@@ -16,8 +16,8 @@ type Item struct {
 	LastUsedAt time.Time
 }
 
-func NewItem(title, content string, isActive *bool, createdAt time.Time, updatedAt time.Time, lastUsedAt time.Time) *Item {
-	return &Item{
+func NewClip(title, content string, isActive *bool, createdAt time.Time, updatedAt time.Time, lastUsedAt time.Time) *Clip {
+	return &Clip{
 		Title:      title,
 		Content:    content,
 		IsActive:   isActive,
