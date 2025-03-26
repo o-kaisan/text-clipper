@@ -1,4 +1,4 @@
-package tui
+package bubbletea
 
 import (
 	"log"
@@ -7,12 +7,12 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/o-kaisan/text-clipper/common"
-	"github.com/o-kaisan/text-clipper/item"
-	"github.com/o-kaisan/text-clipper/tui/constants"
+	"github.com/o-kaisan/text-clipper/di"
+	"github.com/o-kaisan/text-clipper/interface/ui/list"
 )
 
 // StartTea the entry point for the UI. Initializes the model.
-func StartTea(tr item.ItemRepository) error {
+func StartTea(c di.Container) error {
 
 	// ログ出力設定
 	debug_env := os.Getenv("TEXT_CLIPPER_DEBUG")
@@ -23,11 +23,7 @@ func StartTea(tr item.ItemRepository) error {
 		defer f.Close()
 	}
 
-	constants.Ir = &tr
-
-	// TODO: can we acknowledge this error
-	// エラーがtea.Cmdなのでアプリがスタートする前にキャッチできない
-	m, _ := InitialList()
+	m, _ := list.NewListModel(c.Cs)
 	if _, err := tea.NewProgram(m, tea.WithAltScreen()).Run(); err != nil {
 		log.Fatal("Error while running program:", err)
 		os.Exit(1)
