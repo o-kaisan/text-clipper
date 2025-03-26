@@ -8,7 +8,6 @@ import (
 
 	"github.com/o-kaisan/text-clipper/common"
 	"github.com/o-kaisan/text-clipper/di"
-	"github.com/o-kaisan/text-clipper/item"
 	"github.com/o-kaisan/text-clipper/tui/app"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
