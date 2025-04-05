@@ -4,38 +4,12 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/o-kaisan/text-clipper/common"
-	"github.com/o-kaisan/text-clipper/item"
-	"github.com/o-kaisan/text-clipper/tui"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
+	"github.com/o-kaisan/text-clipper/di"
+	"github.com/o-kaisan/text-clipper/infrastructure/sqlite"
+	app "github.com/o-kaisan/text-clipper/interface/bubbletea"
 )
-
-func openSqlite() (*gorm.DB, error) {
-
-	dbPath, err := common.GetPathFromPath("text-clipper.db")
-	if err != nil {
-		return nil, fmt.Errorf("failed in getting db path: %w", err)
-	}
-	dbDir := filepath.Dir(dbPath)
-	if err := os.MkdirAll(dbDir, 0755); err != nil {
-		return nil, fmt.Errorf("unable to create database directory: %w", err)
-	}
-
-	// データベースに接続
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
-	if err != nil {
-		return nil, fmt.Errorf("unable to open database: %w", err)
-	}
-
-	err = db.AutoMigrate(&item.Item{})
-	if err != nil {
-		return db, fmt.Errorf("unable to migrate database: %w", err)
-	}
-	return db, nil
-}
 
 func main() {
 
@@ -57,11 +31,12 @@ func main() {
 		os.Exit(0)
 	}
 
-	db, err := openSqlite()
+	db, err := sqlite.NewSqlite()
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
 	}
-	tr := item.ItemRepository{DB: db}
-	tui.StartTea(tr)
+
+	container := di.NewContainer(db)
+	app.StartTea(container)
 }
