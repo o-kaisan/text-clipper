@@ -1,5 +1,7 @@
 # Text Clipper
 
+![](./demo/text-clipper-demo.gif)
+
 ## About
 
 `Text Clipper` is a TUI-based text manager. It allows you to save texts that you use frequently and, through this tool, display them in a list. You can then select the text you want to copy to the clipboard.
