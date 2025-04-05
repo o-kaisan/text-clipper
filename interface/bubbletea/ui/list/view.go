@@ -3,7 +3,7 @@ package list
 import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/o-kaisan/text-clipper/interface/constants"
+	"github.com/o-kaisan/text-clipper/interface/bubbletea/constants"
 )
 
 const (

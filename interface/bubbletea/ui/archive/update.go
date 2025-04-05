@@ -7,8 +7,8 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/o-kaisan/text-clipper/interface/command"
-	"github.com/o-kaisan/text-clipper/interface/constants"
+	"github.com/o-kaisan/text-clipper/interface/bubbletea/command"
+	"github.com/o-kaisan/text-clipper/interface/bubbletea/constants"
 )
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

@@ -5,14 +5,14 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/o-kaisan/text-clipper/interface/constants"
+	"github.com/o-kaisan/text-clipper/interface/bubbletea/constants"
 )
 
 var (
 	descriptionStyle  = lipgloss.NewStyle().PaddingLeft(1).Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color("#696969"))
 	registerViewStyle = lipgloss.NewStyle().PaddingLeft(1).PaddingBottom(1)
 	blurredStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	registerHelpStyle = blurredStyle.Copy()
+	registerHelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 	validateErrStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	focusedButton     = lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Render("[ Submit ]")
 	blurredButton     = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))

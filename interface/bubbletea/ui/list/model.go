@@ -7,7 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/o-kaisan/text-clipper/domain/service"
-	"github.com/o-kaisan/text-clipper/interface/constants"
+	"github.com/o-kaisan/text-clipper/interface/bubbletea/constants"
 )
 
 type model struct {

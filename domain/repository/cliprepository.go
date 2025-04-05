@@ -3,7 +3,7 @@ package repository
 import "github.com/o-kaisan/text-clipper/domain/model"
 
 type ClipRepository interface {
-	FindByID(id uint) *model.Clip
+	FindByID(id uint) (*model.Clip, error)
 	Copy(id uint) error
 	Create(clip *model.Clip) error
 	Update(clip *model.Clip) error

@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -35,15 +36,13 @@ func NewClipRepositoryImpl(db *gorm.DB) *ClipRepositoryImpl {
 	return &ClipRepositoryImpl{db}
 }
 
-// TODO エラーを返すようにしないとじゃないか
-func (g *ClipRepositoryImpl) FindByID(id uint) *model.Clip {
+func (g *ClipRepositoryImpl) FindByID(id uint) (*model.Clip, error) {
 	var clip model.Clip
 	result := g.DB.First(&clip, id)
 	if result.Error != nil {
-		log.Panicf("failed to get clip from DB: id=%d, err=%v", id, result.Error)
-		return nil
+		return nil, fmt.Errorf("failed to get clip from DB: id=%d, err=%v", id, result.Error)
 	}
-	return &clip
+	return &clip, nil
 }
 
 func (g *ClipRepositoryImpl) Copy(id uint) error {

@@ -1,4 +1,4 @@
-package list
+package archive
 
 import (
 	"fmt"
@@ -9,15 +9,15 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	dmodel "github.com/o-kaisan/text-clipper/domain/model"
-	"github.com/o-kaisan/text-clipper/interface/constants"
+	"github.com/o-kaisan/text-clipper/interface/bubbletea/constants"
 )
 
-// activeItemはlist.activeItemインターフェースを実装するためのラッパー
-type activeItem struct {
+// archivedClipはlist.archivedClipインターフェースを実装するためのラッパー
+type archivedClip struct {
 	*dmodel.Clip
 }
 
-func (l activeItem) FilterValue() string {
+func (l archivedClip) FilterValue() string {
 	return l.Clip.Title
 }
 
@@ -29,7 +29,7 @@ func (d delegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
 func (d delegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
 
 	itemNum := index + 1
-	i, ok := listItem.(activeItem)
+	i, ok := listItem.(archivedClip)
 	if !ok {
 		return
 	}
@@ -53,13 +53,13 @@ func (d delegate) Render(w io.Writer, m list.Model, index int, listItem list.Ite
 	fmt.Fprint(w, fn(str))
 }
 
-func convertActiveClipsToListItems(clips []*dmodel.Clip) list.Model {
+func convertArchivedClipsToListItems(clips []*dmodel.Clip) list.Model {
 	listItems := make([]list.Item, len(clips))
 	for i, item := range clips {
-		listItems[i] = activeItem{Clip: item}
+		listItems[i] = archivedClip{Clip: item}
 	}
 
-	// リストモデルの初期化
+	// リストモデルの初期化 //
 	// リストの高さと幅はdelegate.Render()で決まるため0で初期化する
 	l := list.New(listItems, delegate{}, 0, 0)
 	l.FilterInput.CharLimit = constants.TitleMaxLength

@@ -8,9 +8,9 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/o-kaisan/text-clipper/interface/constants"
-	"github.com/o-kaisan/text-clipper/interface/ui/archive"
-	"github.com/o-kaisan/text-clipper/interface/ui/register"
+	"github.com/o-kaisan/text-clipper/interface/bubbletea/constants"
+	"github.com/o-kaisan/text-clipper/interface/bubbletea/ui/archive"
+	"github.com/o-kaisan/text-clipper/interface/bubbletea/ui/register"
 )
 
 // TODO 関数分割
@@ -140,7 +140,6 @@ func handleSelectKey(m model) (tea.Model, tea.Cmd) {
 	selectedClip := m.list.SelectedItem().(activeItem)
 	err := clipboard.WriteAll(selectedClip.Content)
 	if err != nil {
-		// TODO エラーメッセージの内容をお見直す
 		fmt.Println(fmt.Errorf("failed to clip the item to clipboard: item=%s, err=%w", selectedClip.Content, err))
 	}
 	// 最終利用日時を更新する

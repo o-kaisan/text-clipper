@@ -8,7 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/o-kaisan/text-clipper/common"
 	"github.com/o-kaisan/text-clipper/di"
-	"github.com/o-kaisan/text-clipper/interface/ui/list"
+	"github.com/o-kaisan/text-clipper/interface/bubbletea/ui/list"
 )
 
 // StartTea the entry point for the UI. Initializes the model.
