@@ -21,6 +21,8 @@ var (
 	// クリップのタイトルに付けられる最大文字数
 	TitleMaxLength = 30
 	ListVewWidth   = 33
+	// 一覧画面の幅を調整するためのwidth
+	AdjustedWidth = 41
 )
 
 var (
