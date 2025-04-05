@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/o-kaisan/text-clipper/interface/constants"
 )
 
 var (
@@ -24,7 +25,7 @@ func (m model) View() string {
 	}
 
 	registerViewWidth := m.width - 5
-	registerViewHeight := 18
+	registerViewHeight := constants.WindowSizeMsg.Height
 	helpWidth := m.width - 5
 
 	// 最低限のwidthを定義
@@ -34,6 +35,7 @@ func (m model) View() string {
 	}
 
 	m.content.SetWidth(registerViewWidth - 3)
+	m.content.SetHeight(registerViewHeight * 1 / 2) // 画面の幅に合わせて広がるようにする
 
 	var b strings.Builder
 	b.WriteString(descriptionStyle.MarginLeft(-1).Render(descriptionMessage))
