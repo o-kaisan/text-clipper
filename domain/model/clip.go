@@ -6,6 +6,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/atotto/clipboard"
 	"gorm.io/gorm"
 )
 
@@ -30,6 +31,12 @@ func NewClip(title, content string, isActive *bool, createdAt time.Time, updated
 	}
 }
 
+// CopyToClipBoard クリップボードにコンテンツをコピーする
+func (c *Clip) CopyToClipBoard() error {
+	return clipboard.WriteAll(c.Content)
+}
+
+// TruncateContent コンテンツを指定の高さと幅でトランケートする
 func (c *Clip) TruncateContent(height int, width int) string {
 	// コンテンツを指定の幅で折り返して分割
 	wrappedLines := wrapText(c.Content, width)

@@ -54,12 +54,16 @@ func (cs ClipService) GetArchivedClips() ([]*model.Clip, error) {
 
 // RegisterClip は、クリップを登録または更新します。
 func (cs ClipService) RegisterClip(cid uint, title string, content string) error {
-	var err error
 	now := time.Now()
 	if cid == 0 { // 新規登録
 		newClip := model.NewClip(title, content, common.BoolPtr(true), now, now, now)
-		err = cs.cr.Create(newClip)
+		err := cs.cr.Create(newClip)
+		if err != nil {
+			return fmt.Errorf("failed to add new item: %w", err)
+		}
+
 	} else { //上書き
+		var err error
 		targetClip, err := cs.cr.FindByID(cid)
 		if err != nil {
 			return fmt.Errorf("cannot update clip: title=%s, id=%d err=%w", title, cid, err)
@@ -67,9 +71,9 @@ func (cs ClipService) RegisterClip(cid uint, title string, content string) error
 		targetClip.Title = title
 		targetClip.Content = content
 		err = cs.cr.Update(targetClip)
-	}
-	if err != nil {
-		return fmt.Errorf("can not save new text: %w", err)
+		if err != nil {
+			return fmt.Errorf("can not save new text: %w", err)
+		}
 	}
 	return nil
 }
@@ -110,12 +114,19 @@ func (cs ClipService) DeactivateClip(cid uint) error {
 	return nil
 }
 
-// UpdateLastUsedAt は、指定したIDのクリップの最終利用日時を更新します。
-func (cs ClipService) UpdateLastUsedAt(cid uint) error {
-	target, err := cs.cr.FindByID(cid)
+func (cs ClipService) CopyToClipBoard(cid uint) error {
+	var err error
+	// クリップボードにコピーする
+	c, err := cs.cr.FindByID(cid)
 	if err != nil {
-		return fmt.Errorf("could not update clip: id=%d err=%w", cid, err)
+		return fmt.Errorf("cannot deactivate clip: title=%s, id=%d err=%w", c.Title, cid, err)
 	}
-	target.LastUsedAt = time.Now()
-	return cs.cr.Update(target)
+
+	err = c.CopyToClipBoard()
+	if err != nil {
+		return fmt.Errorf("failed to copy to clipboard: %w", err)
+	}
+	// 最終利用日時を更新する
+	c.LastUsedAt = time.Now()
+	return cs.cr.Update(c)
 }

@@ -39,7 +39,7 @@ func (m model) View() string {
 	}
 
 	titleView := m.pageTitleView(width)
-	listView := m.listView(width, m.height+adjustedHeight)
+	listView := m.listView(m.height + adjustedHeight)
 	preview := m.previewView(width-constants.AdjustedWidth, m.height+adjustedHeight)
 	helpView := m.helpView(helpWidth)
 
@@ -50,7 +50,7 @@ func (m model) pageTitleView(width int) string {
 	return titleAreaStyle.Width(width).Render(titleStyle.Render("# Active Items"))
 }
 
-func (m model) listView(width, height int) string {
+func (m model) listView(height int) string {
 	m.list.SetHeight(height)
 	m.list.Styles.NoItems = noItemStyle.Width(constants.AdjustedWidth)
 	m.list.Styles.PaginationStyle = paginationStyle

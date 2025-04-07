@@ -1,9 +1,6 @@
 package list
 
 import (
-	"fmt"
-
-	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -13,7 +10,6 @@ import (
 	"github.com/o-kaisan/text-clipper/interface/bubbletea/ui/register"
 )
 
-// TODO 関数分割
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
@@ -110,7 +106,7 @@ func handleArchiveKey(m model) (tea.Model, tea.Cmd) {
 }
 
 func handleEditKey(m model) (tea.Model, tea.Cmd) {
-	var cmds []interface{}
+	var cmds []tea.Msg
 	// アイテムが無ければなにもしない
 	items := m.list.Items()
 	if len(items) <= 0 {
@@ -120,7 +116,7 @@ func handleEditKey(m model) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, textinput.Blink)
 	selectedItem := m.list.SelectedItem().(activeItem)
 	registerModel := register.NewRegister(m.cs, m, selectedItem.ID, selectedItem.Title, selectedItem.Content)
-	return registerModel, nil
+	return registerModel.Update(cmds)
 }
 func handleFetchData(m model) (tea.Model, tea.Cmd) {
 	ActiveClips, err := m.cs.GetActiveClips()
@@ -138,11 +134,10 @@ func handleSelectKey(m model) (tea.Model, tea.Cmd) {
 	}
 	// 選択したアイテムを取得
 	selectedClip := m.list.SelectedItem().(activeItem)
-	err := clipboard.WriteAll(selectedClip.Content)
+	err := m.cs.CopyToClipBoard(selectedClip.ID)
 	if err != nil {
-		fmt.Println(fmt.Errorf("failed to clip the item to clipboard: item=%s, err=%w", selectedClip.Content, err))
+		return nil, func() tea.Msg { return constants.ErrMsg(err) }
 	}
-	// 最終利用日時を更新する
 
 	// アイテムを選択したらアプリを閉じる
 	return m, tea.Quit
