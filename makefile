@@ -8,7 +8,7 @@ deps:
 	go mod tidy
 
 run:
-	@go run text-clipper.go
+	go run text-clipper.go
 
 build:
 	go build text-clipper.go
